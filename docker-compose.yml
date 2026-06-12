@@ -1,0 +1,111 @@
+version: '3.9'
+
+services:
+
+    # Database
+    # ---------------------------------------------------------------
+
+    postgres:
+        image: postgres:16-alpine
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: password
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        networks:
+            - breezy-network
+
+    mongodb:
+        image: mongo:7
+        ports:
+            - "27017:27017"
+        volumes:
+            - mongo_data:/data/db
+        networks:
+            - breezy-network
+
+    # Services
+    # ---------------------------------------------------------------
+
+    auth-service:
+        build: ./services/auth-service
+        ports:
+            - "3001:3001"
+        env_file:
+            - ./services/auth-service/.env
+        depends_on:
+            - postgres
+        networks:
+            - breezy-network
+
+    user-service:
+        build: ./services/user-service
+        ports:
+            - "3002:3002"
+        env_file:
+            - ./services/user-service/.env
+        depends_on:
+            - postgres
+        networks:
+            - breezy-network
+
+    post-service:
+        build: ./services/post-service
+        ports:
+            - "3003:3003"
+        env_file:
+            - ./services/post-service/.env
+        depends_on:
+            - mongodb
+        networks:
+            - breezy-network
+
+    profile-service:
+        build: ./services/profile-service
+        ports:
+            - "3004:3004"
+        env_file:
+            - ./services/profile-service/.env
+        depends_on:
+            - postgres
+            - mongodb
+        networks:
+            - breezy-network
+
+    api-gateway:
+        build: ./services/api-gateway
+        ports:
+            - "3000:3000"
+        env_file:
+            - ./services/api-gateway/.env
+        depends_on:
+            - auth-service
+            - user-service
+            - post-service
+            - profile-service
+        networks:
+            - breezy-network
+
+    frontend:
+        build: ./frontend
+        ports:
+            - "3005:3000"
+        env_file:
+            - ./frontend/.env
+        depends_on:
+            - api-gateway
+        networks:
+            - breezy-network
+
+# Volumes & Network
+# ---------------------------------------------------------------
+
+volumes:
+    postgres_data:
+    mongo_data:
+    
+networks:
+    breezy-network:
+        driver: bridge
