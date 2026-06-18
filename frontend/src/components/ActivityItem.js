@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { CornerUpLeft, Heart, Flame, UserPlus, AtSign, ChevronRight, BadgeCheck } from 'lucide-react';
 
 // type d'event -> icône
@@ -7,7 +8,7 @@ export default function ActivityItem({ item }) {
   const Icon = icons[item.type] ?? Heart;
 
   return (
-    <button className="flex w-full items-center gap-3 py-3 text-left">
+    <Link href={item.link} className="flex w-full items-center gap-3 py-3 text-left">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand">
         <Icon size={18} />
       </div>
@@ -23,6 +24,6 @@ export default function ActivityItem({ item }) {
       {item.verified
         ? <BadgeCheck size={20} className="shrink-0 text-brand" />
         : <ChevronRight size={20} className="shrink-0 text-faint" />}
-    </button>
+    </Link>
   );
 }

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Search, ChevronRight, Landmark, Trophy, Cpu, TrendingUp, Image, FlaskConical } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
 import { explore } from '@/data/explore';
@@ -56,7 +57,7 @@ export default function ExplorePage() {
 
 function HotTopic({ topic }) {
   return (
-    <button className="flex w-full items-center gap-3 rounded-2xl border border-line bg-white p-3 text-left">
+    <Link href={topic.link} className="flex w-full items-center gap-3 rounded-2xl border border-line bg-white p-3 text-left">
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand/10 font-title font-bold text-brand">
         {topic.degree}°
       </div>
@@ -65,14 +66,14 @@ function HotTopic({ topic }) {
         <p className="text-xs text-faint">{topic.meta}</p>
       </div>
       <ChevronRight size={18} className="shrink-0 text-faint" />
-    </button>
+    </Link>
   );
 }
 
 function CategoryCard({ category }) {
   const Icon = categoryIcons[category.icon] ?? Landmark;
   return (
-    <button className="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 text-left">
+    <Link href={category.link} className="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 text-left">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
         <Icon size={18} />
       </div>
@@ -80,6 +81,6 @@ function CategoryCard({ category }) {
         <p className="font-title font-semibold text-ink">{category.name}</p>
         <p className="text-xs text-faint">{category.topics} topics</p>
       </div>
-    </button>
+    </Link>
   );
 }
