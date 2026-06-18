@@ -26,7 +26,7 @@ export default function BottomNav() {
       <Link href="#" aria-label="Créer" className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand text-white shadow-md shadow-brand/30">
         <Plus size={24} />
       </Link>
-      <NavLink href="#" icon={Bell} label="Activité" active={false} />
+      <NavLink href="/activity" icon={Bell} label="Activité" active={path === '/activity'} />
       <NavLink href="/profile" icon={User} label="Profil" active={path === '/profile'} />
     </nav>
   );
