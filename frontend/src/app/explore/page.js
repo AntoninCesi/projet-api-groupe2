@@ -1,4 +1,5 @@
 import { Search, ChevronRight, Landmark, Trophy, Cpu, TrendingUp, Image, FlaskConical } from 'lucide-react';
+import Link from 'next/link';
 import BottomNav from '@/components/BottomNav';
 import { explore } from '@/data/explore';
 
@@ -56,7 +57,7 @@ export default function ExplorePage() {
 
 function HotTopic({ topic }) {
   return (
-    <button className="flex w-full items-center gap-3 rounded-2xl border border-line bg-white p-3 text-left">
+    <Link href={`/topic/${topic.id}`} className="flex w-full items-center gap-3 rounded-2xl border border-line bg-white p-3 text-left">
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand/10 font-title font-bold text-brand">
         {topic.degree}°
       </div>
@@ -65,7 +66,7 @@ function HotTopic({ topic }) {
         <p className="text-xs text-faint">{topic.meta}</p>
       </div>
       <ChevronRight size={18} className="shrink-0 text-faint" />
-    </button>
+    </Link>
   );
 }
 
