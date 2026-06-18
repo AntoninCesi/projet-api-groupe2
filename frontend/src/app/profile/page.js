@@ -24,15 +24,15 @@ export default function ProfilePage() {
 
       {/* stats */}
       <div className="mt-6 grid grid-cols-3 gap-3">
-        <Stat value={stats.topics} label="Topiques" />
-        <Stat value={stats.following} label="Abonnements" />
+        <Stat value={stats.topics} label="Topics" />
+        <Stat value={stats.following} label="Following" />
         <Stat value={stats.karma} label="Karma" />
       </div>
 
       {/* mes thèmes */}
       <div className="mt-8 flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-brand">— Mes thèmes</h2>
-        <button className="text-sm font-medium text-brand">Gérer</button>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-brand">— My Themes</h2>
+        <button className="text-sm font-medium text-brand">Edit</button>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-3">
         {themes.map((t) => (
