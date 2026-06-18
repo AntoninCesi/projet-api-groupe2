@@ -1,9 +1,12 @@
 require('dotenv').config();
 const express = require('express');
 const connectDB = require('./config/database.config');
+const postRoutes = require('./routes/post.routes');
 
 const app = express();
 app.use(express.json());
+
+app.use('/posts', postRoutes);
 
 const PORT = process.env.PORT || 3000;
 
