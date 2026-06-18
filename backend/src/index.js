@@ -10,6 +10,9 @@ app.use('/posts', postRoutes);
 
 const PORT = process.env.PORT || 3000;
 
+const authRoutes = require('./routes/auth.routes');
+app.use('/api/auth', authRoutes);
+
 connectDB().then(() => {
     app.listen(PORT, () => console.log(`Breezy backend is running on port ${PORT}`));
 });
