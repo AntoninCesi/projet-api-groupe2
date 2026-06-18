@@ -1,0 +1,154 @@
+const Post = require('../models/post.model');
+const Activity = require('../models/activity.model');
+const Notification = require('../models/notification.model');
+
+// Create a post
+const createPost = async (req, res) => {
+    const { content, topicId, tags, repostOf } = req.body;
+    try {
+        const post = await Post.create({
+            authorId: req.user.id,
+            content,
+            topicId: topicId || null,
+            tags: tags || [],
+            repostOf: repostOf || null,
+        });
+
+        await Activity.create({
+            userId: req.user.id,
+            type: repostOf ? 'REPOST' : 'POST',
+            targetType: 'Post',
+            targetId: post._id,
+        });
+
+        res.status(201).json(post);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// Display a post
+const getPost = async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+        res.json(post);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// Like / Unlike a post (toggle)
+const likePost = async (req, res) => {
+    try {
+        const post =await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+
+        const userId = req.user.id;
+        const alreadyLiked = post.likes.some(id => id.equals(userId));
+
+        if (alreadyLiked) {
+            post.likes.pull(userId);
+            await post.save();
+            return res.json({ liked: false, likesCount: post.likes.length });
+        }
+
+        post.likes.push(userId);
+        await post.save();
+
+        await Activity.create({
+            userId,
+            type: 'LIKE',
+            targetType: 'Post',
+            targetId: post._id,
+        });
+
+        if (!post.authorId.equals(userId)) {
+            await Notification.create({
+                userId: post.authorId,
+                type: 'LIKE',
+                sourceType: 'Post',
+                sourceId: post._id,
+            });
+        }
+        res.json({ liked: true, likesCount: post.likes.length });
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// Add a comment on a post
+const addComment = async (req, res) => {
+    const { content } = req.body;
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+
+        const comment = { authorId: req.user.id, content };
+        post.comments.push(comment);
+        await post.save();
+
+        const savedComment = post.comments[post.comments.length - 1];
+
+        await Activity.create({
+            userId: req.user.id,
+            type: 'COMMENT',
+            targetType: 'Post',
+            targetId: post._id,
+        });
+
+        if (!post.authorId.equals(req.user.id)) {
+            await Notification.create({
+                userId: post.authorId,
+                type: 'MENTION',
+                sourceType: 'Comment',
+                sourceId: savedComment._id,
+            });
+        }
+
+        res.status(201).json(savedComment);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// Add a reply on a comment
+const addReply = async (req, res) => {
+    const { content } = req.body;
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+
+        const comment = post.comments.id(req.params.commentId);
+        if (!comment) return res.status(404).json({ error: 'Comment not found' });
+
+        const reply = { authorId: req.user.id, content };
+        comment.replies.push(reply);
+        await post.save();
+
+        const savedReply = comment.replies[comment.replies.length - 1];
+
+        await Activity.create({
+            userId: req.user.id,
+            type: 'COMMENT',
+            targetType: 'Comment',
+            targetId: comment._id,
+        });
+
+        if (!comment.authorId.equals(req.user.id)) {
+            await Notification.create({
+                userId: comment.authorId,
+                type: 'MENTION',
+                sourceType: 'Reply',
+                sourceId: savedReply._id,
+            });
+        }
+
+        res.status(201).json(savedReply);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { createPost, getPost, likePost, addComment, addReply };
