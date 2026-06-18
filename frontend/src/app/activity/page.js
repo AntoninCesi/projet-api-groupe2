@@ -7,7 +7,7 @@ export default function ActivityPage() {
     <main className="mx-auto min-h-screen max-w-md bg-background px-5 pb-28">
       {/* header */}
       <div className="pt-8">
-        <h1 className="font-title text-3xl font-bold text-ink">Activity</h1>
+        <h1 className="font-title text-3xl font-bold text-ink">Notifications</h1>
         <p className="mt-1 text-faint">What's moving around you.</p>
       </div>
 

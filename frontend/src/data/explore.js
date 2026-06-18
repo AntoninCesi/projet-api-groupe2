@@ -8,11 +8,11 @@ export const explore = {
     { id: 4, degree: 71, title: 'Inondations à Valence', meta: 'Climat · 51 posts · 1,3k' },
   ],
   categories: [
-    { id: 1, name: 'Politique', topics: '240 topiques', icon: 'politics' },
-    { id: 2, name: 'Sport', topics: '186 topiques', icon: 'sport' },
-    { id: 3, name: 'Tech', topics: '152 topiques', icon: 'tech' },
-    { id: 4, name: 'Économie', topics: '96 topiques', icon: 'economy' },
-    { id: 5, name: 'Culture', topics: '131 topiques', icon: 'culture' },
-    { id: 6, name: 'Sciences', topics: '74 topiques', icon: 'science' },
+    { id: 1, name: 'Politique', topics: '240', icon: 'politics' },
+    { id: 2, name: 'Sport', topics: '186', icon: 'sport' },
+    { id: 3, name: 'Tech', topics: '152', icon: 'tech' },
+    { id: 4, name: 'Économie', topics: '96', icon: 'economy' },
+    { id: 5, name: 'Culture', topics: '131', icon: 'culture' },
+    { id: 6, name: 'Sciences', topics: '74', icon: 'science' },
   ],
 };
