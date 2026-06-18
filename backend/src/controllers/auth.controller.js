@@ -8,12 +8,12 @@ exports.register = async (req, res) => {
     const { email, password, username } = req.body;
 
     if (password.length < 6) {
-      return res.status(400).json({ error: 'Mot de passe trop court (6 caractères min)' });
+      return res.status(400).json({ error: 'Password too short (6 characters min)' });
     }
 
     const existing = await User.findOne({ $or: [{ email }, { username }] });
     if (existing) {
-      return res.status(409).json({ error: 'Email ou username déjà utilisé' });
+      return res.status(409).json({ error: 'Email or username already taken' });
     }
 
     const hashed = await bcrypt.hash(password, 10);
@@ -25,7 +25,7 @@ exports.register = async (req, res) => {
       username: user.username
     });
   } catch (err) {
-    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+    res.status(500).json({ error: 'Server error', details: err.message });
   }
 };
 
@@ -36,12 +36,12 @@ exports.login = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const token = jwt.sign(
@@ -52,7 +52,7 @@ exports.login = async (req, res) => {
 
     res.json({ token, user: { id: user._id, email: user.email, username: user.username, role: user.role } });
   } catch (err) {
-    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+    res.status(500).json({ error: 'Server error', details: err.message });
   }
 };
 
@@ -61,10 +61,10 @@ exports.me = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     if (!user) {
-      return res.status(404).json({ error: 'Utilisateur introuvable' });
+      return res.status(404).json({ error: 'User not found' });
     }
     res.json(user);
   } catch (err) {
-    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+    res.status(500).json({ error: 'Server error', details: err.message });
   }
 };

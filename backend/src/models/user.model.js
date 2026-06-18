@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
+const { Schema } = mongoose;
 
-const userSchema = new mongoose.Schema({
+const userSchema = new Schema({
   email: {
     type: String,
     required: true,
@@ -10,7 +11,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true // hashé avant save, jamais en clair
+    required: true // hashed before save
   },
   username: {
     type: String,
@@ -31,7 +32,37 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['visitor', 'user', 'moderator', 'admin'],
     default: 'user'
-  }
+  },
+  status: { 
+    type: String, enum: ['active', 'suspended', 'banned'],
+    default: 'active'
+  },
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+  isOfficialSource: {
+    type: Boolean,
+    default: false
+  },
+  karma: {
+    type: Number,
+    default: 0
+  },
+  degree: {
+    type: Number,
+    default: 0
+  },
+  following: {
+    type: [Schema.Types.ObjectId],
+    ref: 'User',
+    default: []
+  },
+  followedTopics: {
+    type: [Schema.Types.ObjectId],
+    ref: 'Topic',
+    default: []
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
