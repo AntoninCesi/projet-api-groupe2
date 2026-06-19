@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { BadgeCheck, TrendingUp, ArrowUpRight, ArrowDownRight, ArrowRight } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
 import ThemeCard from '@/components/ThemeCard';
+import Sparkline from '@/components/Sparkline';
 import { currentUser, featured, trending, themes } from '@/data/home';
 
 export default function Home() {
@@ -50,8 +51,8 @@ export default function Home() {
 
         {/* fluctuation du sujet */}
         <div className="mt-4 flex items-center gap-3">
+          <Sparkline data={featured.spark} width={180} height={36} />
           <span className="flex items-center gap-1 text-sm font-semibold text-brand">
-            {/* lucide arrow  */}
             <TrendingUp size={16} /> {featured.change}
           </span>
           <span className="text-sm text-faint">/{featured.window}</span>
@@ -94,6 +95,7 @@ export default function Home() {
                 <p className="truncate font-semibold text-ink">{t.name}</p>
                 <p className="text-xs text-faint">{t.meta}</p>
               </div>
+              <Sparkline data={t.spark} width={56} height={24} color={t.up ? '#06C2B2' : '#90A09B'} />
               <span className="w-10 text-right font-title text-sm font-bold text-ink">{t.degree}°</span>
               <span className={`flex w-12 items-center justify-end gap-0.5 text-xs font-medium ${t.up ? 'text-brand' : 'text-faint'}`}>
                 {t.up ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
