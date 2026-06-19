@@ -1,5 +1,5 @@
-import { Search, ChevronRight, Landmark, Trophy, Cpu, TrendingUp, Image, FlaskConical } from 'lucide-react';
 import Link from 'next/link';
+import { Search, ChevronRight, Landmark, Trophy, Cpu, TrendingUp, Image, FlaskConical } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
 import { explore } from '@/data/explore';
 
@@ -73,7 +73,7 @@ function HotTopic({ topic }) {
 function CategoryCard({ category }) {
   const Icon = categoryIcons[category.icon] ?? Landmark;
   return (
-    <button className="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 text-left">
+    <Link href={category.link} className="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 text-left">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
         <Icon size={18} />
       </div>
@@ -81,6 +81,6 @@ function CategoryCard({ category }) {
         <p className="font-title font-semibold text-ink">{category.name}</p>
         <p className="text-xs text-faint">{category.topics} topics</p>
       </div>
-    </button>
+    </Link>
   );
 }
