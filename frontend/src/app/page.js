@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import { BadgeCheck, TrendingUp, ArrowUpRight, ArrowDownRight, ArrowRight } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
 import ThemeCard from '@/components/ThemeCard';
@@ -6,6 +7,7 @@ import Sparkline from '@/components/SparkLine';
 import { currentUser, featured, trending, themes } from '@/data/home';
 
 export default function Home() {
+  const loggedIn = cookies().get('trend_auth');
   return (
     <main className="mx-auto min-h-screen max-w-md bg-background px-5 pb-28">
       {/* top bar : marque + user (ou login si déconnecté) */}
@@ -15,12 +17,11 @@ export default function Home() {
           <span className="text-brand">*</span>
           <span className="text-xs text-faint">by Breezy</span>
         </Link>
-        {currentUser ? (
+        {loggedIn ? (
           <Link href="/profile" aria-label="Profile">
             <img src={currentUser.avatar} alt={currentUser.name} className="h-9 w-9 rounded-full object-cover" />
           </Link>
         ) : (
-          // shortcut: page /login pas encore faite
           <Link href="/login" className="rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white">
             Log in
           </Link>
