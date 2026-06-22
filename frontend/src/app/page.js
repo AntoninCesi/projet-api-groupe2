@@ -71,7 +71,7 @@ export default function Home() {
           <p className="flex-1 text-sm text-muted">{featured.source.excerpt}</p>
         </div>
 
-        {/* lien vers le post */}
+        {/* lien vers le topic */}
         <Link
           href={featured.link}
           className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-brand-grad py-4 font-semibold text-white shadow-md shadow-brand/30"

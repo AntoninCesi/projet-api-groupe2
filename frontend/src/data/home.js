@@ -25,7 +25,8 @@ export const featured = {
     { t: 1750032400, p: 0.78 },
   ],
   source: { name: 'Le Monde', verified: true, excerpt: 'Drone strikes reported near Kharkiv this morning…' },
-  link: '/post/war-in-ukraine',   
+  // "Enter the topic" -> page du topic (pas un post)
+  link: '/topic/1',
 };
 
 export const trending = [
