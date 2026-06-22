@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Compass, Vote, Droplet, Trophy } from 'lucide-react';
 
 const icons = { compass: Compass, vote: Vote, droplet: Droplet, trophy: Trophy };
@@ -6,7 +7,7 @@ export default function ThemeCard({ theme }) {
   const Icon = icons[theme.icon] ?? Compass;
 
   return (
-    <div className="rounded-2xl border border-line bg-gradient-to-br from-white to-background p-4">
+    <Link href={`/theme/${theme.id}`} className="block rounded-2xl border border-line bg-gradient-to-br from-white to-background p-4">
       <div className="flex items-center gap-2">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
           <Icon size={18} />
@@ -22,6 +23,6 @@ export default function ThemeCard({ theme }) {
         <span className="font-title font-bold text-brand">{theme.degree}°</span>
         <span className="truncate text-muted">{theme.topic}</span>
       </div>
-    </div>
+    </Link>
   );
 }
