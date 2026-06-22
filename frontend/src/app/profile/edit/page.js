@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Camera, AtSign } from 'lucide-react';
 import { profile } from '@/data/profile';
+import { logout } from '@/utils/auth';
 
 const BIO_MAX = 160;
 
@@ -23,8 +24,9 @@ export default function EditProfilePage() {
   }
 
   function handleLogout() {
-    // waiting auth JWT
-    router.push('/');
+    logout(); // efface le cookie mock
+    // hard reload: vide le cache client (pages prefetch) et relance le middleware
+    window.location.href = '/';
   }
 
   return (

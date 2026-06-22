@@ -33,7 +33,6 @@ export default function ProfilePage() {
       {/* mes thèmes */}
       <div className="mt-8 flex items-center justify-between">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-brand">— My Themes</h2>
-        <button className="text-sm font-medium text-brand">Edit</button>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-3">
         {themes.map((t) => (
