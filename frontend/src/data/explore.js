@@ -7,11 +7,11 @@ export const explore = {
     { id: 4, degree: 71, title: 'Inondations à Valence', meta: 'Climat · 51 posts · 1,3k', link: '/topic/floods-valencia' },
   ],
   categories: [
-    { id: 1, name: 'Politique', topics: '240', icon: 'politics', link: '/category/politics' },
-    { id: 2, name: 'Sport', topics: '186', icon: 'sport', link: '/category/sport' },
-    { id: 3, name: 'Tech', topics: '152', icon: 'tech', link: '/category/tech' },
-    { id: 4, name: 'Économie', topics: '96', icon: 'economy', link: '/category/economy' },
-    { id: 5, name: 'Culture', topics: '131', icon: 'culture', link: '/category/culture' },
-    { id: 6, name: 'Sciences', topics: '74', icon: 'science', link: '/category/science' },
+    { id: 1, name: 'Politique', topics: '240', icon: 'politics', link: '/theme/5' },
+    { id: 2, name: 'Sport', topics: '186', icon: 'sport', link: '/theme/6' },
+    { id: 3, name: 'Tech', topics: '152', icon: 'tech', link: '/theme/7' },
+    { id: 4, name: 'Économie', topics: '96', icon: 'economy', link: '/theme/8' },
+    { id: 5, name: 'Culture', topics: '131', icon: 'culture', link: '/theme/9' },
+    { id: 6, name: 'Sciences', topics: '74', icon: 'science', link: '/theme/10' },
   ],
 };

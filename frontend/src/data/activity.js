@@ -5,7 +5,7 @@ export const activity = [
     items: [
       { id: 1, type: 'reply', actor: 'geopol_nerd', text: 'replied to your comment in War in Ukraine', time: '2 min', link: '/topic/war-in-ukraine' },
       { id: 2, type: 'like', actor: 'RMC Sport', text: 'liked your post in Qatar – Switzerland', time: '18 min', verified: true, link: '/topic/qatar-switzerland' },
-      { id: 3, type: 'fire', actor: 'Climate', text: 'is on fire — 91° right now', time: '2 h', link: '/topic/climate' },
+      { id: 3, type: 'fire', actor: 'Climate', text: 'is on fire — 91° right now', time: '2 h', link: '/theme/climate' },
     ],
   },
   {

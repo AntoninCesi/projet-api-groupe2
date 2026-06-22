@@ -23,7 +23,7 @@ export default function ExplorePage() {
         <p className="mt-1 text-sm text-muted">Find hot topics or start deep diving by category</p>
       </div>
 
-      {/* recherche */}
+      {/* search */}
       <div className="mt-4 flex items-center gap-2 rounded-2xl border border-line bg-white px-4 py-3">
         <Search size={18} className="text-faint" />
         {/* shortcut: champ non branché (pas de recherche back) */}
@@ -34,7 +34,7 @@ export default function ExplorePage() {
         />
       </div>
 
-      {/* en feu maintenant */}
+      {/* trending */}
       <h2 className="mt-6 text-sm font-semibold uppercase tracking-wide text-brand">— Harrrrrrrrr trends</h2>
       <div className="mt-3 space-y-3">
         {hot.map((t) => (
@@ -42,8 +42,8 @@ export default function ExplorePage() {
         ))}
       </div>
 
-      {/* catégories */}
-      <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-brand">— Categories</h2>
+      {/* themes */}
+      <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-brand">— Themes</h2>
       <div className="mt-3 grid grid-cols-2 gap-3">
         {categories.map((c) => (
           <CategoryCard key={c.id} category={c} />
