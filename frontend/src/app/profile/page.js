@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Settings } from 'lucide-react';
 import ThemeCard from '@/components/ThemeCard';
 import BottomNav from '@/components/BottomNav';
@@ -10,7 +11,7 @@ export default function ProfilePage() {
     <main className="mx-auto min-h-screen max-w-md bg-background px-5 pb-28">
       {/* header */}
       <div className="flex justify-end py-4">
-        <button className="text-muted" aria-label="Réglages"><Settings size={22} /></button>
+        <Link href="/profile/edit" className="text-muted" aria-label="Edit profile"><Settings size={22} /></Link>
       </div>
 
       {/* identité */}
