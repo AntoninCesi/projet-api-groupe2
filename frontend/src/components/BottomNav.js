@@ -22,8 +22,7 @@ export default function BottomNav() {
     <nav className="fixed bottom-4 left-1/2 z-10 flex w-[calc(100%-2.5rem)] max-w-[22rem] -translate-x-1/2 items-center justify-between rounded-full border border-line bg-white px-6 py-3 shadow-lg">
       <NavLink href="/" icon={Home} label="Accueil" active={path === '/'} />
       <NavLink href="/explore" icon={Compass} label="Explorer" active={path === '/explore'} />
-      {/* shortcut: page "Créer" pas encore faite -> # pour l'instant */}
-      <Link href="#" aria-label="Créer" className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand text-white shadow-md shadow-brand/30">
+      <Link href="/create" aria-label="Créer" className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand text-white shadow-md shadow-brand/30">
         <Plus size={24} />
       </Link>
       <NavLink href="/activity" icon={Bell} label="Activité" active={path === '/activity'} />
