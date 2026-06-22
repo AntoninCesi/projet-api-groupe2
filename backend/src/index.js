@@ -3,10 +3,11 @@ const express = require('express');
 const connectDB = require('./config/database.config');
 const postRoutes = require('./routes/post.routes');
 const authRoutes = require('./routes/auth.routes');
+const messageRoutes = require('./routes/message.routes');
 
 const app = express();
 app.use(express.json());
-
+app.use('/messages', messageRoutes);
 app.use('/posts', postRoutes);
 app.use('/api/auth', authRoutes);
 
