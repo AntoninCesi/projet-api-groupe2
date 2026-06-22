@@ -1,0 +1,67 @@
+// fake data en attendant le back
+// shortcut: un seul topic mocké, on ignore l'id de l'URL pour l'instant
+export const topic = {
+  id: 1,
+  title: 'War in Ukraine',
+  avatar: 'https://picsum.photos/seed/ukraine/80',
+  degree: 98,
+  participants: '4.2k participants',
+  following: true,
+};
+
+// tab: 'official' | 'community' -> sert au filtre des onglets
+export const posts = [
+  {
+    id: 1,
+    tab: 'official',
+    pinned: true,
+    author: 'Le Monde',
+    avatar: 'https://picsum.photos/seed/lemonde/80',
+    verified: true,
+    time: '3 min',
+    text: 'Drone strikes reported near Kharkiv overnight. Power outages in several districts; authorities call for calm. Live coverage to follow.',
+    likes: 2100,
+    liked: true,
+    comments: 340,
+    reposts: 412,
+  },
+  {
+    id: 2,
+    tab: 'official',
+    pinned: true,
+    author: 'Reuters',
+    avatar: 'https://picsum.photos/seed/reuters/80',
+    verified: true,
+    time: '18 min',
+    text: 'The peace summit planned for Thursday will bring together seven heads of state. The agenda is still to be confirmed.',
+    likes: 1400,
+    comments: 210,
+    reposts: 180,
+  },
+  {
+    id: 3,
+    tab: 'community',
+    pinned: false,
+    author: '@kyiv_watcher',
+    avatar: 'https://picsum.photos/seed/kyiv/80',
+    verified: false,
+    time: '5 min',
+    text: 'Heard explosions in the north of the city a few minutes ago. Stay safe everyone 🙏',
+    likes: 320,
+    comments: 45,
+    reposts: 12,
+  },
+  {
+    id: 4,
+    tab: 'community',
+    pinned: false,
+    author: '@analyst_ben',
+    avatar: 'https://picsum.photos/seed/ben/80',
+    verified: false,
+    time: '22 min',
+    text: 'Thread: why the next 48 hours are critical for the front line and what to watch for. 1/',
+    likes: 540,
+    comments: 88,
+    reposts: 67,
+  },
+];
