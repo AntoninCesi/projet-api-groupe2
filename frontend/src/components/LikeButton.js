@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Heart } from 'lucide-react';
+import { formatCount } from '@/utils/format';
 
 // like front-only : gère son état localement
 // shortcut: à brancher sur POST /posts/:id/like (service likePost côté back)
@@ -27,10 +28,4 @@ export default function LikeButton({ count, liked: initialLiked = false, size = 
       <Heart size={size} fill={liked ? 'currentColor' : 'none'} /> {formatCount(n)}
     </button>
   );
-}
-
-// 2100 -> "2.1k" (app en anglais, point décimal)
-function formatCount(n) {
-  if (n < 1000) return n;
-  return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
 }
