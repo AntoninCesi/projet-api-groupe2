@@ -5,11 +5,16 @@ import Link from 'next/link';
 import { ArrowLeft, MoreHorizontal, MessageCircle, Repeat2, BadgeCheck, Pin } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
 import LikeButton from '@/components/LikeButton';
+import Avatar from '@/components/Avatar';
 import { topic, posts } from '@/data/topic';
+import { createdPosts } from '@/data/createdPosts';
 
 export default function TopicPage() {
-  const [tab, setTab] = useState('official');
-  const visible = posts.filter((p) => p.tab === tab);
+  // posts créés cette session en premier, puis les posts mockés
+  const allPosts = [...createdPosts, ...posts];
+  // si on vient de poster (community), on ouvre direct sur Community pour voir son post
+  const [tab, setTab] = useState(createdPosts.length ? 'community' : 'official');
+  const visible = allPosts.filter((p) => p.tab === tab);
 
   return (
     <main className="mx-auto min-h-screen max-w-md bg-background px-5 pb-28">
@@ -71,7 +76,12 @@ function Post({ post }) {
       )}
 
       <div className="flex items-start gap-2">
-        <img src={post.avatar} alt={post.author} className="h-9 w-9 rounded-full object-cover" />
+        {/* posts mockés -> logo (img) ; posts user -> avatar à initiales */}
+        {post.avatar ? (
+          <img src={post.avatar} alt={post.author} className="h-9 w-9 rounded-full object-cover" />
+        ) : (
+          <Avatar name={post.author} size={36} />
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1">
             <span className="font-title font-semibold text-ink">{post.author}</span>
