@@ -1,7 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+<<<<<<< Updated upstream
 import { Eye, EyeOff, AtSign, Mail, Lock, ArrowRight, Check } from 'lucide-react';
+=======
+import { Apple, Eye, EyeOff, AtSign, Mail, Lock, ArrowRight, Check } from 'lucide-react';
+>>>>>>> Stashed changes
 import api from '@/utils/api';
 import { setToken } from '@/utils/auth';
 import { interests } from '@/data/auth';
@@ -27,12 +31,20 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
+<<<<<<< Updated upstream
+=======
+      // signup -> on crée le compte puis on enchaîne sur le login
+>>>>>>> Stashed changes
       if (mode === 'signup') {
         await api.post('/api/auth/register', { username, email, password: pwd });
       }
       const res = await api.post('/api/auth/login', { email, password: pwd });
       setToken(res.data.token);
+<<<<<<< Updated upstream
       // hard reload: middleware 
+=======
+      // hard reload: middleware + pages relisent le cookie tout de suite
+>>>>>>> Stashed changes
       window.location.href = '/';
     } catch (err) {
       setError(err.response?.data?.error || 'Something went wrong. Please try again.');

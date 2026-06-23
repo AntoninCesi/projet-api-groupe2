@@ -1,32 +1,46 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, MessageCircle, Repeat2, BadgeCheck, ChevronDown, Pin } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
 import LikeButton from '@/components/LikeButton';
 import Avatar from '@/components/Avatar';
-import { post, comments as initialComments } from '@/data/post';
+import api from '@/utils/api';
+import { mapPost, mapComment } from '@/utils/adapters';
+import { getUserId } from '@/utils/auth';
 
 export default function PostPage() {
-  // shortcut: id de l'URL ignoré, un seul post mocké
-  const [comments, setComments] = useState(initialComments);
+  const router = useRouter();
+  const { id } = useParams();
+  const [post, setPost] = useState(null);
+  const [comments, setComments] = useState([]);
 
-  // ajoute un commentaire top-level depuis le composer
-  function addComment(text) {
-    const newComment = { id: nextId(comments), author: 'camille', time: 'now', text, likes: 0, replies: [] };
-    setComments([newComment, ...comments]);
+  // charge le post + ses commentaires/réponses embarqués (un seul appel)
+  function load() {
+    const userId = getUserId();
+    api.get(`/posts/${id}`).then((res) => {
+      setPost(mapPost(res.data, userId));
+      setComments((res.data.comments ?? []).map((c) => mapComment(c, userId)));
+    }).catch(() => {});
   }
 
-  // ajoute une reply à un commentaire 
-  function addReply(commentId, text) {
-    setComments(
-      comments.map((c) =>
-        c.id === commentId
-          ? { ...c, replies: [...c.replies, { id: nextId(c.replies), author: 'camille', time: 'now', text, likes: 0 }] }
-          : c
-      )
-    );
+  useEffect(() => { load(); }, [id]);
+
+  // commentaire top-level -> POST puis refetch
+  async function addComment(text) {
+    try {
+      await api.post(`/posts/${id}/comments`, { content: text });
+      load();
+    } catch {}
+  }
+
+  // réponse à un commentaire (1 niveau) -> POST puis refetch
+  async function addReply(commentId, text) {
+    try {
+      await api.post(`/posts/${id}/comments/${commentId}/replies`, { content: text });
+      load();
+    } catch {}
   }
 
   const total = comments.reduce((n, c) => n + 1 + c.replies.length, 0);
@@ -35,16 +49,16 @@ export default function PostPage() {
     <main className="mx-auto min-h-screen max-w-md bg-background px-5 pb-28">
       {/* header */}
       <div className="flex items-center gap-3 pt-4">
-        <Link href="/topic/1" aria-label="Back" className="text-ink">
+        <button onClick={() => router.back()} aria-label="Back" className="text-ink">
           <ArrowLeft size={22} />
-        </Link>
+        </button>
         <div className="min-w-0 flex-1">
           <h1 className="font-title text-base font-bold leading-tight text-ink">Post</h1>
-          <p className="truncate text-xs text-faint">{post.topic}</p>
+          <p className="truncate text-xs text-faint">{post?.topic || ''}</p>
         </div>
       </div>
 
-      <PostCard post={post} />
+      {post && <PostCard post={post} />}
 
       {/* en-tête de la liste de réponses */}
       <div className="mt-5 flex items-center justify-between">
@@ -91,7 +105,7 @@ function PostCard({ post }) {
 
       {/* actions : like cliquable, reste en gris (// shortcut: pas branché) */}
       <div className="mt-4 flex items-center gap-6 text-faint">
-        <LikeButton count={post.likes} liked={post.liked} size={18} />
+        <LikeButton count={post.likes} liked={post.liked} size={18} postId={post.id} />
         <span className="flex items-center gap-1.5 text-sm">
           <MessageCircle size={18} /> {post.comments}
         </span>
@@ -209,9 +223,4 @@ function Composer({ onSubmit }) {
       </button>
     </div>
   );
-}
-
-// id local unique : max des ids existants + 1
-function nextId(list) {
-  return list.reduce((max, item) => Math.max(max, item.id), 0) + 1;
 }
