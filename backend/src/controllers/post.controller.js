@@ -177,6 +177,17 @@ const likeComment = async (req, res) => {
         already ? comment.likes.pull(userId) : comment.likes.push(userId);
         await post.save();
 
+        // notifie l'auteur du commentaire (à l'ajout du like, pas sur soi-même)
+        if (!already && !comment.authorId.equals(userId)) {
+            await Notification.create({
+                userId: comment.authorId,
+                actorId: userId,
+                type: 'LIKE',
+                sourceType: 'Post',
+                sourceId: post._id,
+            });
+        }
+
         res.json({ liked: !already, likesCount: comment.likes.length });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -197,6 +208,17 @@ const likeReply = async (req, res) => {
         const already = reply.likes.some(id => id.equals(userId));
         already ? reply.likes.pull(userId) : reply.likes.push(userId);
         await post.save();
+
+        // notifie l'auteur de la réponse (à l'ajout du like, pas sur soi-même)
+        if (!already && !reply.authorId.equals(userId)) {
+            await Notification.create({
+                userId: reply.authorId,
+                actorId: userId,
+                type: 'LIKE',
+                sourceType: 'Post',
+                sourceId: post._id,
+            });
+        }
 
         res.json({ liked: !already, likesCount: reply.likes.length });
     } catch (err) {

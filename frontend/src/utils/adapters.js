@@ -68,26 +68,29 @@ export function mapProfile(u) {
 }
 
 // notification API -> activity item front
-// NB: le back ne populate PAS sourceId -> pas de pseudo/texte réel.
-// On dérive un libellé à partir du `type` (acteur générique).
+// le back populate `actorId` (username/avatarUrl/isVerified) -> on affiche le vrai acteur.
+// fallback acteur générique si actorId absent (vieilles notifs / TOPIC_ON_FIRE).
 const NOTIF_META = {
-  LIKE:          { type: 'like',    actor: 'Someone', text: 'liked your post' },
-  FOLLOW:        { type: 'follow',  actor: 'Someone', text: 'started following you' },
-  MENTION:       { type: 'mention', actor: 'Someone', text: 'mentioned you' },
-  REPOST:        { type: 'repost',  actor: 'Someone', text: 'reposted your post' },
-  NEW_POST:      { type: 'post',    actor: 'Someone', text: 'published a new post' },
-  TOPIC_ON_FIRE: { type: 'fire',    actor: 'A topic', text: 'is on fire right now' },
+  LIKE:          { type: 'like',    fallback: 'Someone', text: 'liked your post' },
+  FOLLOW:        { type: 'follow',  fallback: 'Someone', text: 'started following you' },
+  MENTION:       { type: 'mention', fallback: 'Someone', text: 'mentioned you' },
+  REPOST:        { type: 'repost',  fallback: 'Someone', text: 'reposted your post' },
+  NEW_POST:      { type: 'post',    fallback: 'Someone', text: 'published a new post' },
+  TOPIC_ON_FIRE: { type: 'fire',    fallback: 'A topic', text: 'is on fire right now' },
   // libellés prêts si le back ajoute ces types (sinon les comments/replies arrivent en MENTION)
-  COMMENT:       { type: 'reply',   actor: 'Someone', text: 'commented on your post' },
-  REPLY:         { type: 'reply',   actor: 'Someone', text: 'replied to you' },
+  COMMENT:       { type: 'reply',   fallback: 'Someone', text: 'commented on your post' },
+  REPLY:         { type: 'reply',   fallback: 'Someone', text: 'replied to you' },
 };
 
 export function mapNotification(n) {
-  const meta = NOTIF_META[n.type] ?? { type: 'like', actor: 'Someone', text: 'sent you a notification' };
+  const meta = NOTIF_META[n.type] ?? { type: 'like', fallback: 'Someone', text: 'sent you a notification' };
+  const actorName = n.actorId?.username;
   return {
     id: n._id,
     type: meta.type,
-    actor: meta.actor,
+    actor: actorName ? '@' + actorName : meta.fallback,
+    avatar: n.actorId?.avatarUrl || null,
+    verified: n.actorId?.isVerified ?? false,
     text: meta.text,
     time: timeAgo(n.createdAt),
     read: n.isRead ?? false,
