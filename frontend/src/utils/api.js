@@ -1,7 +1,7 @@
 import { getToken } from '@/utils/auth';
 
 // petit client fetch qui remplace axios (zéro dépendance).
-// surface gardée : api.get(url, { params }) / api.post(url, body) -> { data }
+// surface gardée : api.get(url, { params }) / api.post(url, body) / api.patch(url, body) -> { data }
 const BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
 async function request(method, path, { params, body } = {}) {
@@ -29,6 +29,7 @@ async function request(method, path, { params, body } = {}) {
 const api = {
   get: (path, opts) => request('GET', path, opts),
   post: (path, body) => request('POST', path, { body }),
+  patch: (path, body) => request('PATCH', path, { body }),
 };
 
 export default api;
