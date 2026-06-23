@@ -1,10 +1,14 @@
 const Topic = require('../models/topic.model');
+const User = require('../models/user.model');
 
-// list topics sorted by degree (hottest first)
+// list topics sorted by degree (hottest first), optional title search
 const listTopics = async (req, res) => {
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit = 20, search } = req.query;
     try {
-        const topics = await Topic.find()
+        const filter = search
+            ? { title: { $regex: String(search).trim(), $options: 'i' } }
+            : {};
+        const topics = await Topic.find(filter)
         .sort({ degree: -1 })
         .skip((page - 1) * limit)
         .limit(Number(limit));
@@ -25,5 +29,32 @@ const getTopic = async (req, res) => {
     }
 };
 
-module.exports = { listTopics, getTopic };
+// suivre / ne plus suivre un topic (toggle), maj du compteur de participants
+const followTopic = async (req, res) => {
+    try {
+        const topic = await Topic.findById(req.params.id);
+        if (!topic) return res.status(404).json({ error: 'Topic not found' });
+
+        const me = await User.findById(req.user.id);
+        if (!me) return res.status(404).json({ error: 'User not found' });
+
+        const already = me.followedTopics.some(id => id.equals(req.params.id));
+
+        if (already) {
+            me.followedTopics.pull(req.params.id);
+            topic.participantsCount = Math.max(0, (topic.participantsCount || 0) - 1);
+            await Promise.all([me.save(), topic.save()]);
+            return res.json({ following: false });
+        }
+
+        me.followedTopics.push(req.params.id);
+        topic.participantsCount = (topic.participantsCount || 0) + 1;
+        await Promise.all([me.save(), topic.save()]);
+        res.json({ following: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { listTopics, getTopic, followTopic };
 

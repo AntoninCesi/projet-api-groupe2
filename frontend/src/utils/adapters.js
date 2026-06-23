@@ -118,9 +118,39 @@ export function mapTopic(t, userId, myFollowedTopics) {
     variation: t.variationPct ?? 0,
     participants: formatCount(t.participantsCount ?? 0) + ' participants',
     avatar: null, // pas dans le modèle Topic -> avatar à initiales
+    // snapshots de chaleur pour la sparkline : [{ t, p }] (vide tant que le job n'a pas tourné)
+    spark: Array.isArray(t.history) ? t.history : [],
     // suivi = topicId dans les followedTopics du user courant (sinon false)
     following: Array.isArray(myFollowedTopics)
       ? myFollowedTopics.some((id) => String(id) === String(t._id))
+      : false,
+  };
+}
+
+// déduit une icône (clé partagée ThemeCard / explore) à partir du nom de catégorie
+export function themeIcon(name = '') {
+  const n = name.toLowerCase();
+  if (/polit|election|govern|war|geopolit/.test(n)) return 'politics';
+  if (/sport|football|soccer|nba|nfl|tennis|cricket|game/.test(n)) return 'sport';
+  if (/tech|\bai\b|crypto|software/.test(n)) return 'tech';
+  if (/econ|market|finance|\bfed\b|inflation|business/.test(n)) return 'economy';
+  if (/cultur|music|movie|film|celebrit|\bart\b/.test(n)) return 'culture';
+  if (/scien|space|climate|health|covid/.test(n)) return 'science';
+  return 'politics';
+}
+
+// theme API (catégorie agrégée) -> theme front (ThemeCard + page /theme)
+export function mapTheme(t, myFollowedThemes) {
+  return {
+    id: t.name,
+    name: t.name,
+    degree: t.degree ?? 0,
+    topicsCount: t.topicsCount ?? 0,
+    actives: formatCount(t.participantsCount ?? 0) + ' active',
+    topic: t.topTopic ?? '', // topic le plus chaud du thème (sous-titre ThemeCard)
+    icon: themeIcon(t.name),
+    following: Array.isArray(myFollowedThemes)
+      ? myFollowedThemes.includes(t.name)
       : false,
   };
 }

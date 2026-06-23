@@ -16,6 +16,7 @@ export default function TopicPage() {
   const search = useSearchParams();
   const [topic, setTopic] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [following, setFollowing] = useState(false);
   // si on vient de publier (?tab=community), on ouvre direct sur Community
   const [tab, setTab] = useState(search.get('tab') === 'community' ? 'community' : 'official');
 
@@ -25,7 +26,22 @@ export default function TopicPage() {
     api.get('/posts', { params: { topicId: id } })
       .then((res) => setPosts(res.data.map((p) => mapPost(p, userId))))
       .catch(() => {});
+    // état "suivi" depuis le profil courant (ignore si non connecté)
+    api.get('/api/auth/me')
+      .then((res) => setFollowing((res.data.followedTopics ?? []).some((t) => String(t) === String(id))))
+      .catch(() => {});
   }, [id]);
+
+  async function toggleFollow() {
+    const prev = following;
+    setFollowing(!prev); // optimiste
+    try {
+      const { data } = await api.post(`/topics/${id}/follow`);
+      setFollowing(data.following);
+    } catch {
+      setFollowing(prev); // échec (ex. non connecté) -> on revient en arrière
+    }
+  }
 
   const visible = posts.filter((p) => p.tab === tab);
 
@@ -45,9 +61,11 @@ export default function TopicPage() {
           <h1 className="truncate font-title text-base font-bold leading-tight text-ink">{topic?.title || 'Loading…'}</h1>
           <p className="text-xs text-faint">{topic?.degree ?? 0}° · {topic?.participants ?? '—'}</p>
         </div>
-        {/* shortcut: bouton follow non branché (Phase 4) */}
-        <button className={`rounded-full px-4 py-1.5 text-sm font-medium ${topic?.following ? 'bg-brand/10 text-brand' : 'bg-brand text-white'}`}>
-          {topic?.following ? 'Following' : 'Follow'}
+        <button
+          onClick={toggleFollow}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium ${following ? 'bg-brand/10 text-brand' : 'bg-brand text-white'}`}
+        >
+          {following ? 'Following' : 'Follow'}
         </button>
       </div>
 

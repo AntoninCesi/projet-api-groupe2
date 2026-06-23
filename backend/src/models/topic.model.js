@@ -17,6 +17,11 @@ const topicSchema = new Schema({
     isOfficial: { type: Boolean, default: false },
     postsCount: { type: Number, default: 0 },
     participantsCount: { type: Number, default: 0 },
+    // snapshots de chaleur pour les sparklines : { t: unix s, p: degree 0..100 }
+    history: {
+        type: [{ t: Number, p: Number, _id: false }],
+        default: [],
+    },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Topic', topicSchema);

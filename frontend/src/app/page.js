@@ -3,15 +3,25 @@ import { cookies } from 'next/headers';
 import { User, BadgeCheck, ArrowUpRight, ArrowDownRight, ArrowRight } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
 import ThemeCard from '@/components/ThemeCard';
+import SparkLine from '@/components/SparkLine';
 import api from '@/utils/api';
-import { mapTopic } from '@/utils/adapters';
-import { themes } from '@/data/home'; // shortcut: themes encore mockés (pas d'endpoint back)
+import { mapTopic, mapTheme } from '@/utils/adapters';
 
 // topics triés par degree (les plus chauds en premier) depuis l'API
 async function getTopics() {
   try {
     const res = await api.get('/topics', { params: { limit: 10 } });
-    return res.data.map(mapTopic);
+    return res.data.map((t) => mapTopic(t));
+  } catch {
+    return [];
+  }
+}
+
+// thèmes (catégories agrégées) les plus chauds depuis l'API
+async function getThemes() {
+  try {
+    const res = await api.get('/themes');
+    return res.data.map((t) => mapTheme(t)).slice(0, 4);
   } catch {
     return [];
   }
@@ -19,7 +29,7 @@ async function getTopics() {
 
 export default async function Home() {
   const loggedIn = cookies().get('trend_token');
-  const topics = await getTopics();
+  const [topics, themes] = await Promise.all([getTopics(), getThemes()]);
   const featured = topics[0] ?? null;
   const trending = topics.slice(1, 6);
 
@@ -71,6 +81,13 @@ export default async function Home() {
 
           <p className="mt-3 text-sm text-muted">{featured.participants}</p>
 
+          {/* courbe de chaleur (sparkline) — visible dès que le job a accumulé des points */}
+          {featured.spark.length > 1 && (
+            <div className="mt-3">
+              <SparkLine data={featured.spark} width={320} height={56} />
+            </div>
+          )}
+
           {/* lien vers le topic */}
           <Link
             href={`/topic/${featured.id}`}
@@ -96,6 +113,9 @@ export default async function Home() {
                 <p className="truncate font-semibold text-ink">{t.title}</p>
                 <p className="text-xs text-faint">{t.participants}</p>
               </div>
+              {t.spark.length > 1 && (
+                <SparkLine data={t.spark} width={56} height={24} color={t.variation >= 0 ? '#06C2B2' : '#90A09B'} />
+              )}
               <span className="w-10 text-right font-title text-sm font-bold text-ink">{t.degree}°</span>
               <span className={`flex w-12 items-center justify-end gap-0.5 text-xs font-medium ${t.variation >= 0 ? 'text-brand' : 'text-faint'}`}>
                 {t.variation >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
@@ -106,19 +126,20 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* thèmes de l'utilisateur */}
-      {/* shortcut: themes encore mockés -> à brancher quand le back exposera un endpoint themes */}
-      <section className="mt-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">— Your themes</h2>
-          <Link href="/profile" className="text-sm font-medium text-brand">Manage</Link>
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          {themes.map((t) => (
-            <ThemeCard key={t.id} theme={t} />
-          ))}
-        </div>
-      </section>
+      {/* thèmes les plus chauds (catégories agrégées via GET /themes) */}
+      {themes.length > 0 && (
+        <section className="mt-8">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">— Hot themes</h2>
+            <Link href="/explore" className="text-sm font-medium text-brand">Explore</Link>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            {themes.map((t) => (
+              <ThemeCard key={t.id} theme={t} />
+            ))}
+          </div>
+        </section>
+      )}
 
       <BottomNav />
     </main>
