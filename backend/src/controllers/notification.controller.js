@@ -5,6 +5,7 @@ const listNotifications = async (req, res) => {
     const { page = 1, limit = 20 } = req.query;
     try {
         const notifications = await Notification.find({ userId: req.user.id })
+            .populate('actorId', 'username avatarUrl isVerified')
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(Number(limit));

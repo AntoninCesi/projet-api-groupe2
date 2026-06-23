@@ -76,6 +76,7 @@ const likePost = async (req, res) => {
         if (!post.authorId.equals(userId)) {
             await Notification.create({
                 userId: post.authorId,
+                actorId: userId,
                 type: 'LIKE',
                 sourceType: 'Post',
                 sourceId: post._id,
@@ -111,6 +112,7 @@ const addComment = async (req, res) => {
         if (!post.authorId.equals(req.user.id)) {
             await Notification.create({
                 userId: post.authorId,
+                actorId: req.user.id,
                 type: 'MENTION',
                 sourceType: 'Comment',
                 sourceId: savedComment._id,
@@ -149,6 +151,7 @@ const addReply = async (req, res) => {
         if (!comment.authorId.equals(req.user.id)) {
             await Notification.create({
                 userId: comment.authorId,
+                actorId: req.user.id,
                 type: 'MENTION',
                 sourceType: 'Reply',
                 sourceId: savedReply._id,
