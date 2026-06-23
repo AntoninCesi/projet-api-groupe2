@@ -95,7 +95,11 @@ function PostCard({ post }) {
       )}
 
       <div className="flex items-center gap-2">
-        <Avatar name={post.author} size={40} />
+        {post.avatar ? (
+          <img src={post.avatar} alt={post.author} className="h-10 w-10 rounded-full object-cover" />
+        ) : (
+          <Avatar name={post.author} size={40} />
+        )}
         <div className="flex flex-1 items-center gap-1">
           <span className="font-title text-lg font-semibold text-ink">{post.author}</span>
           {post.verified && <BadgeCheck size={16} className="text-brand" />}
@@ -178,7 +182,11 @@ function CommentItem({ comment, onReply }) {
 function CommentRow({ comment, onReplyClick }) {
   return (
     <div className="flex gap-2">
-      <Avatar name={comment.author} size={32} />
+      {comment.avatar ? (
+        <img src={comment.avatar} alt={comment.author} className="h-8 w-8 rounded-full object-cover" />
+      ) : (
+        <Avatar name={comment.author} size={32} />
+      )}
       <div className="flex-1">
         <div className="flex items-center gap-1">
           <span className="text-sm font-semibold text-ink">{comment.author}</span>
