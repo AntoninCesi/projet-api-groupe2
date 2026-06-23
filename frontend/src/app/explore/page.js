@@ -1,7 +1,22 @@
 import Link from 'next/link';
 import { Search, ChevronRight, Landmark, Trophy, Cpu, TrendingUp, Image, FlaskConical } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
+import api from '@/utils/api';
+import { mapTopic } from '@/utils/adapters';
 import { explore } from '@/data/explore';
+
+// topics les plus chauds depuis l'API (triés par degree côté back)
+async function getHotTopics() {
+  try {
+    const res = await api.get('/topics', { params: { limit: 10 } });
+    return res.data.map((t) => ({
+      ...mapTopic(t),
+      meta: `${t.postsCount ?? 0} posts · ${t.participantsCount ?? 0} participants`,
+    }));
+  } catch {
+    return []; // back indispo -> liste vide plutôt que crash
+  }
+}
 
 const categoryIcons = {
   politics: Landmark,
@@ -12,8 +27,9 @@ const categoryIcons = {
   science: FlaskConical,
 };
 
-export default function ExplorePage() {
-  const { hot, categories } = explore;
+export default async function ExplorePage() {
+  const hot = await getHotTopics();
+  const { categories } = explore;
 
   return (
     <main className="mx-auto min-h-screen max-w-md bg-background px-5 pb-28">
@@ -35,7 +51,7 @@ export default function ExplorePage() {
       </div>
 
       {/* trending */}
-      <h2 className="mt-6 text-sm font-semibold uppercase tracking-wide text-brand">— Harrrrrrrrr trends</h2>
+      <h2 className="mt-6 text-sm font-semibold uppercase tracking-wide text-brand">— Hot trends</h2>
       <div className="mt-3 space-y-3">
         {hot.map((t) => (
           <HotTopic key={t.id} topic={t} />

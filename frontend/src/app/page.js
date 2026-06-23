@@ -1,13 +1,28 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
-import { BadgeCheck, TrendingUp, ArrowUpRight, ArrowDownRight, ArrowRight } from 'lucide-react';
+import { User, BadgeCheck, ArrowUpRight, ArrowDownRight, ArrowRight } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
 import ThemeCard from '@/components/ThemeCard';
-import Sparkline from '@/components/SparkLine';
-import { currentUser, featured, trending, themes } from '@/data/home';
+import api from '@/utils/api';
+import { mapTopic } from '@/utils/adapters';
+import { themes } from '@/data/home'; // shortcut: themes encore mockés (pas d'endpoint back)
 
-export default function Home() {
-  const loggedIn = cookies().get('trend_auth');
+// topics triés par degree (les plus chauds en premier) depuis l'API
+async function getTopics() {
+  try {
+    const res = await api.get('/topics', { params: { limit: 10 } });
+    return res.data.map(mapTopic);
+  } catch {
+    return [];
+  }
+}
+
+export default async function Home() {
+  const loggedIn = cookies().get('trend_token');
+  const topics = await getTopics();
+  const featured = topics[0] ?? null;
+  const trending = topics.slice(1, 6);
+
   return (
     <main className="mx-auto min-h-screen max-w-md bg-background px-5 pb-28">
       {/* top bar : marque + user (ou login si déconnecté) */}
@@ -18,8 +33,8 @@ export default function Home() {
           <span className="text-xs text-faint">by Breezy</span>
         </Link>
         {loggedIn ? (
-          <Link href="/profile" aria-label="Profile">
-            <img src={currentUser.avatar} alt={currentUser.name} className="h-9 w-9 rounded-full object-cover" />
+          <Link href="/profile" aria-label="Profile" className="flex h-9 w-9 items-center justify-center rounded-full bg-brand/10 text-brand">
+            <User size={18} />
           </Link>
         ) : (
           <Link href="/login" className="rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white">
@@ -29,57 +44,42 @@ export default function Home() {
       </header>
 
       {/* à la une : sujet le plus chaud */}
-      <section>
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">— Featured</h2>
-        <div className="mt-2 flex items-start justify-between gap-3">
-          <h1 className="font-title text-4xl font-bold leading-tight text-ink">{featured.topic}</h1>
-          {/* jauge de chaleur */}
-          <div className="flex h-20 w-20 shrink-0 flex-col items-center justify-center rounded-full border-4 border-brand">
-            <span className="font-title text-xl font-bold text-ink">{featured.degree}°</span>
-            {featured.onFire && <span className="text-[9px] font-semibold uppercase tracking-wide text-brand">On fire</span>}
+      {featured && (
+        <section>
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">— Featured</h2>
+          <div className="mt-2 flex items-start justify-between gap-3">
+            <h1 className="font-title text-3xl font-bold leading-tight text-ink">{featured.title}</h1>
+            {/* jauge de chaleur */}
+            <div className="flex h-20 w-20 shrink-0 flex-col items-center justify-center rounded-full border-4 border-brand">
+              <span className="font-title text-xl font-bold text-ink">{featured.degree}°</span>
+              {featured.onFire && <span className="text-[9px] font-semibold uppercase tracking-wide text-brand">On fire</span>}
+            </div>
           </div>
-        </div>
 
-        {/* chips */}
-        <div className="mt-3 flex gap-2">
-          <span className="rounded-full bg-brand/10 px-3 py-1 text-xs font-medium text-press">{featured.tag}</span>
-          {featured.official && (
-            <span className="flex items-center gap-1 rounded-full bg-brand/10 px-3 py-1 text-xs font-medium text-press">
-              <BadgeCheck size={14} /> Official
+          {/* chips */}
+          <div className="mt-3 flex gap-2">
+            {featured.official && (
+              <span className="flex items-center gap-1 rounded-full bg-brand/10 px-3 py-1 text-xs font-medium text-press">
+                <BadgeCheck size={14} /> Official
+              </span>
+            )}
+            <span className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${featured.variation >= 0 ? 'bg-brand/10 text-press' : 'bg-line text-muted'}`}>
+              {featured.variation >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+              {Math.abs(featured.variation)}%
             </span>
-          )}
-        </div>
+          </div>
 
-        {/* fluctuation du sujet */}
-        <div className="mt-4 flex items-center gap-3">
-          <Sparkline data={featured.spark} width={180} height={36} />
-          <span className="flex items-center gap-1 text-sm font-semibold text-brand">
-            <TrendingUp size={16} /> {featured.change}
-          </span>
-          <span className="text-sm text-faint">/{featured.window}</span>
-        </div>
+          <p className="mt-3 text-sm text-muted">{featured.participants}</p>
 
-        <p className="mt-3 text-sm text-muted">
-          {featured.posts} posts · {featured.participants} participants · updated {featured.updated}
-        </p>
-
-        {/* post source mis en avant */}
-        <div className="mt-4 flex items-start gap-2 border-t border-line pt-4">
-          <span className="flex items-center gap-1 text-sm font-semibold text-ink">
-            {featured.source.name}
-            {featured.source.verified && <BadgeCheck size={14} className="text-brand" />}
-          </span>
-          <p className="flex-1 text-sm text-muted">{featured.source.excerpt}</p>
-        </div>
-
-        {/* lien vers le topic */}
-        <Link
-          href={featured.link}
-          className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-brand-grad py-4 font-semibold text-white shadow-md shadow-brand/30"
-        >
-          Enter the topic <ArrowRight size={18} />
-        </Link>
-      </section>
+          {/* lien vers le topic */}
+          <Link
+            href={`/topic/${featured.id}`}
+            className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-brand-grad py-4 font-semibold text-white shadow-md shadow-brand/30"
+          >
+            Enter the topic <ArrowRight size={18} />
+          </Link>
+        </section>
+      )}
 
       {/* ça grimpe maintenant */}
       <section className="mt-8">
@@ -90,17 +90,16 @@ export default function Home() {
 
         <div className="mt-2 divide-y divide-line">
           {trending.map((t, i) => (
-            <Link key={t.id} href={t.link} className="flex items-center gap-3 py-3">
-              <span className="w-5 font-title text-sm font-bold text-faint">{String(i + 1).padStart(2, '0')}</span>
+            <Link key={t.id} href={`/topic/${t.id}`} className="flex items-center gap-3 py-3">
+              <span className="w-5 font-title text-sm font-bold text-faint">{String(i + 2).padStart(2, '0')}</span>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold text-ink">{t.name}</p>
-                <p className="text-xs text-faint">{t.meta}</p>
+                <p className="truncate font-semibold text-ink">{t.title}</p>
+                <p className="text-xs text-faint">{t.participants}</p>
               </div>
-              <Sparkline data={t.spark} width={56} height={24} color={t.up ? '#06C2B2' : '#90A09B'} />
               <span className="w-10 text-right font-title text-sm font-bold text-ink">{t.degree}°</span>
-              <span className={`flex w-12 items-center justify-end gap-0.5 text-xs font-medium ${t.up ? 'text-brand' : 'text-faint'}`}>
-                {t.up ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-                {t.change.replace(/^[+-]/, '')}
+              <span className={`flex w-12 items-center justify-end gap-0.5 text-xs font-medium ${t.variation >= 0 ? 'text-brand' : 'text-faint'}`}>
+                {t.variation >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                {Math.abs(t.variation)}%
               </span>
             </Link>
           ))}
@@ -108,6 +107,7 @@ export default function Home() {
       </section>
 
       {/* thèmes de l'utilisateur */}
+      {/* shortcut: themes encore mockés -> à brancher quand le back exposera un endpoint themes */}
       <section className="mt-8">
         <div className="flex items-center justify-between">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">— Your themes</h2>

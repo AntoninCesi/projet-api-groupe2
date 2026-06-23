@@ -1,11 +1,29 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Settings } from 'lucide-react';
 import ThemeCard from '@/components/ThemeCard';
 import BottomNav from '@/components/BottomNav';
-import { profile } from '@/data/profile';
+import Avatar from '@/components/Avatar';
+import api from '@/utils/api';
+import { mapProfile } from '@/utils/adapters';
+import { profile as mockProfile } from '@/data/profile';
 
 export default function ProfilePage() {
-  const { name, handle, avatar, bio, stats, themes } = profile;
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    api.get('/api/auth/me').then((res) => setProfile(mapProfile(res.data))).catch(() => {});
+  }, []);
+
+  const name = profile?.name ?? '…';
+  const handle = profile?.handle ?? '';
+  const avatar = profile?.avatar ?? null;
+  const bio = profile?.bio ?? '';
+  const stats = profile?.stats ?? { topics: 0, following: 0, karma: 0 };
+  // shortcut: "My Themes" encore mocké (pas d'endpoint dédié côté back)
+  const themes = mockProfile.themes;
 
   return (
     <main className="mx-auto min-h-screen max-w-md bg-background px-5 pb-28">
@@ -16,8 +34,11 @@ export default function ProfilePage() {
 
       {/* identité */}
       <div className="flex flex-col items-center text-center">
-        {/* shortcut: <img> simple, pas de next/image pour éviter la config de domaine */}
-        <img src={avatar} alt={name} className="h-24 w-24 rounded-full object-cover" />
+        {avatar ? (
+          <img src={avatar} alt={name} className="h-24 w-24 rounded-full object-cover" />
+        ) : (
+          <Avatar name={name} size={96} />
+        )}
         <h1 className="mt-3 font-title text-2xl font-bold text-ink">{name}</h1>
         <p className="text-faint">{handle}</p>
         <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted">{bio}</p>
