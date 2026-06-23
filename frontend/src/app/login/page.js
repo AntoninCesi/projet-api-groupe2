@@ -63,7 +63,7 @@ export default function LoginPage() {
         <p className="mx-auto mt-4 max-w-[340px] text-[15px] font-medium leading-relaxed text-muted lg:mx-0 lg:text-base">
           {mode === 'login'
             ? 'Pick up the topics heating up, right where you left off.'
-            : 'Dive into the topics heating up. No endless feed — just what matters.'}
+            : 'Dive into the topics heating up. No endless feed. just what matters.'}
         </p>
       </div>
 
