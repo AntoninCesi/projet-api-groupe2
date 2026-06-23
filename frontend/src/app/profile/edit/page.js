@@ -8,19 +8,19 @@ import api from '@/utils/api';
 import { logout } from '@/utils/auth';
 
 const BIO_MAX = 160;
-const AVATAR_MAX = 256; // côté max (px) après redimensionnement
+const AVATAR_MAX = 256; // max side (px) after resizing
 
 export default function EditProfilePage() {
   const router = useRouter();
   const fileRef = useRef(null);
   const [handle, setHandle] = useState('');
   const [bio, setBio] = useState('');
-  const [avatar, setAvatar] = useState(null); // url ou data URL
+  const [avatar, setAvatar] = useState(null); // url or data URL
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  // pré-remplit avec le profil courant (GET /api/auth/me)
-  // NB: le modèle User n'a que username/bio/avatarUrl -> pas de "name" séparé
+  // pre-fills with the current profile (GET /api/auth/me)
+  // NB: the User model only has username/bio/avatarUrl -> no separate "name"
   useEffect(() => {
     api.get('/api/auth/me')
       .then((res) => {
@@ -31,13 +31,13 @@ export default function EditProfilePage() {
       .catch(() => {});
   }, []);
 
-  // initiales depuis le username (pas de name séparé dans l'app)
+  // initials from the username (no separate name in the app)
   const initials = handle.slice(0, 2).toUpperCase();
 
-  // fichier image -> redimensionné en data URL (avatar léger, stocké dans avatarUrl)
+  // image file -> resized to a data URL (lightweight avatar, stored in avatarUrl)
   async function onPickFile(e) {
     const file = e.target.files?.[0];
-    e.target.value = ''; // permet de re-sélectionner le même fichier
+    e.target.value = ''; // allows re-selecting the same file
     if (!file) return;
     if (!file.type.startsWith('image/')) {
       setError('Please choose an image file');
@@ -59,15 +59,15 @@ export default function EditProfilePage() {
       await api.patch('/users/me', { username: handle.trim(), bio, avatarUrl: avatar });
       router.push('/profile');
     } catch (err) {
-      // 409 = username déjà pris (sinon message générique)
+      // 409 = username already taken (otherwise a generic message)
       setError(err.response?.data?.error || 'Could not save profile');
       setSaving(false);
     }
   }
 
   function handleLogout() {
-    logout(); // efface le cookie JWT
-    // hard reload: vide le cache client (pages prefetch) et relance le middleware
+    logout(); // clears the JWT cookie
+    // hard reload: clears the client cache (prefetched pages) and re-runs the middleware
     window.location.href = '/';
   }
 
@@ -114,10 +114,10 @@ export default function EditProfilePage() {
         </button>
       </div>
 
-      {/* erreur (ex: 409 username pris) */}
+      {/* error (e.g. 409 username taken) */}
       {error && <p className="mt-4 text-center text-sm text-red-500">{error}</p>}
 
-      {/* formulaire */}
+      {/* form */}
       <div className="mt-6 space-y-5">
         <Field label="Username">
           <div className="flex items-center gap-2 rounded-2xl border border-line bg-white px-4 py-3 focus-within:border-brand">
@@ -150,7 +150,7 @@ export default function EditProfilePage() {
   );
 }
 
-// redimensionne une image (carré max `max`px) et renvoie une data URL JPEG compacte
+// resizes an image (max `max`px square) and returns a compact JPEG data URL
 function resizeImage(file, max) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

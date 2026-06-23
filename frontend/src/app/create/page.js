@@ -37,7 +37,7 @@ export default function CreatePage() {
     setError('');
     try {
       await api.post('/posts', { content: text.trim(), topicId: topic.id });
-      // ?tab=community : un post user arrive côté Community, on l'ouvre direct
+      // ?tab=community : a user post lands on the Community side, open it directly
       router.push(`/topic/${topic.id}?tab=community`);
     } catch (err) {
       setError(err.response?.data?.error || 'Could not publish. Please try again.');
@@ -61,7 +61,7 @@ export default function CreatePage() {
         </button>
       </div>
 
-      {/* sélecteur de topic */}
+      {/* topic selector */}
       <div className="relative mt-4 w-fit">
         <button
           onClick={() => setPickerOpen(!pickerOpen)}
@@ -89,11 +89,11 @@ export default function CreatePage() {
         )}
       </div>
 
-      {/* auteur + visibilité */}
+      {/* author + visibility */}
       <div className="mt-5 flex items-center gap-2">
         <Avatar name={me?.name || 'You'} size={40} />
         <span className="font-title font-semibold text-ink">{me?.name || 'You'}</span>
-        {/* shortcut: visibilité non branchée (toujours Public en v1) */}
+        {/* shortcut: visibility not wired up (always Public in v1) */}
         <button className="ml-1 flex items-center gap-1 rounded-full border border-line bg-white px-2.5 py-1 text-xs font-medium text-ink">
           <Globe size={13} /> Public
         </button>
@@ -101,7 +101,7 @@ export default function CreatePage() {
 
       {error && <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
-      {/* zone de texte */}
+      {/* text area */}
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -110,10 +110,10 @@ export default function CreatePage() {
         className="mt-4 min-h-[120px] w-full resize-none bg-transparent text-[17px] leading-relaxed text-ink outline-none placeholder:text-faint"
       />
 
-      {/* barre d'outils + compteur */}
+      {/* toolbar + counter */}
       <div className="mt-2 flex items-center justify-between">
         <div className="flex gap-2">
-          {/* shortcut: boutons d'ajout non branchés (image / sondage / lien / média) */}
+          {/* shortcut: add buttons not wired up (image / poll / link / media) */}
           <ToolButton icon={ImageIcon} label="Image" />
           <ToolButton icon={BarChart2} label="Poll" />
           <ToolButton icon={Link2} label="Link" />
@@ -122,7 +122,7 @@ export default function CreatePage() {
         <span className={`text-sm ${remaining <= 20 ? 'text-press' : 'text-faint'}`}>{remaining}</span>
       </div>
 
-      {/* l'espace vide ci-dessous laisse la place au clavier du téléphone */}
+      {/* the empty space below leaves room for the phone keyboard */}
       <div className="flex-1" />
     </main>
   );

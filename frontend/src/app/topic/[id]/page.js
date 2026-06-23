@@ -17,7 +17,7 @@ export default function TopicPage() {
   const [topic, setTopic] = useState(null);
   const [posts, setPosts] = useState([]);
   const [following, setFollowing] = useState(false);
-  // si on vient de publier (?tab=community), on ouvre direct sur Community
+  // if we just posted (?tab=community), open straight to Community
   const [tab, setTab] = useState(search.get('tab') === 'community' ? 'community' : 'official');
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function TopicPage() {
     api.get('/posts', { params: { topicId: id } })
       .then((res) => setPosts(res.data.map((p) => mapPost(p, userId))))
       .catch(() => {});
-    // état "suivi" depuis le profil courant (ignore si non connecté)
+    // "following" state from the current profile (ignored if not signed in)
     api.get('/api/auth/me')
       .then((res) => setFollowing((res.data.followedTopics ?? []).some((t) => String(t) === String(id))))
       .catch(() => {});
@@ -34,12 +34,12 @@ export default function TopicPage() {
 
   async function toggleFollow() {
     const prev = following;
-    setFollowing(!prev); // optimiste
+    setFollowing(!prev); // optimistic
     try {
       const { data } = await api.post(`/topics/${id}/follow`);
       setFollowing(data.following);
     } catch {
-      setFollowing(prev); // échec (ex. non connecté) -> on revient en arrière
+      setFollowing(prev); // failure (e.g. not signed in) -> roll back
     }
   }
 
@@ -69,13 +69,13 @@ export default function TopicPage() {
         </button>
       </div>
 
-      {/* onglets Officiel / Communauté */}
+      {/* Official / Community tabs */}
       <div className="mt-4 flex gap-1 rounded-2xl bg-line/60 p-1">
         <TabButton label="Official" active={tab === 'official'} onClick={() => setTab('official')} />
         <TabButton label="Community" active={tab === 'community'} onClick={() => setTab('community')} />
       </div>
 
-      {/* posts du tab courant -> clic ouvre la page post + commentaires */}
+      {/* posts of the current tab -> click opens the post + comments page */}
       <div className="mt-2 divide-y divide-line">
         {visible.map((p) => (
           <Link key={p.id} href={`/post/${p.id}`} className="block py-4">
@@ -100,7 +100,7 @@ function TabButton({ label, active, onClick }) {
   );
 }
 
-// post posé sur le fond de l'appli, séparé par un trait (divide-y du parent)
+// post sitting on the app background, separated by a line (parent's divide-y)
 function Post({ post }) {
   return (
     <article>
@@ -111,7 +111,7 @@ function Post({ post }) {
       )}
 
       <div className="flex items-start gap-2">
-        {/* posts mockés -> logo (img) ; posts user -> avatar à initiales */}
+        {/* mocked posts -> logo (img); user posts -> initials avatar */}
         {post.avatar ? (
           <img src={post.avatar} alt={post.author} className="h-9 w-9 rounded-full object-cover" />
         ) : (
@@ -129,9 +129,9 @@ function Post({ post }) {
         </button>
       </div>
 
-      <p className="mt-2 text-sm leading-relaxed text-ink">{post.text}</p>
+      <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink">{post.text}</p>
 
-      {/* actions : like cliquable, reste en gris (// shortcut: pas branché) */}
+      {/* actions: like is clickable, rest stays gray (// shortcut: not wired up) */}
       <div className="mt-3 flex items-center gap-6 text-faint">
         <LikeButton count={post.likes} liked={post.liked} size={16} postId={post.id} />
         <span className="flex items-center gap-1.5 text-sm">

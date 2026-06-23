@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-// pages publiques ; tout le reste est réservé aux users connectés
+// public pages ; everything else is reserved for logged-in users
 const PUBLIC = ['/', '/login', '/restricted'];
 
 export function middleware(request) {

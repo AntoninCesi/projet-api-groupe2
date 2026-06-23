@@ -1,10 +1,10 @@
-// fake data en attendant le back
-// shortcut: un seul post mocké, on ignore l'id de l'URL pour l'instant
+// fake data while waiting for the back end
+// shortcut: a single mocked post, we ignore the URL id for now
 export const post = {
   id: 1,
   topic: 'War in Ukraine',
   author: 'Le Monde',
-  authorId: null, // shortcut: id mocké absent -> bouton Message masqué ; vrai _id via mapPost une fois branché
+  authorId: null, // shortcut: mocked id missing -> Message button hidden; real _id via mapPost once wired
   verified: true,
   official: true,
   pinned: true,
@@ -16,7 +16,7 @@ export const post = {
   reposts: 412,
 };
 
-// réponses sur 1 seul niveau (post -> comment -> reply), voir CLAUDE.md
+// replies on a single level (post -> comment -> reply), see CLAUDE.md
 export const comments = [
   {
     id: 1,

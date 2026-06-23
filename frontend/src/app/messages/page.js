@@ -18,8 +18,8 @@ export default function MessagesPage() {
     let alive = true;
     (async () => {
       try {
-        const { data } = await api.get('/messages'); // dernier message par contact
-        // sender/receiver non populés côté back -> on résout le contact via /users/:id
+        const { data } = await api.get('/messages'); // last message per contact
+        // sender/receiver not populated on the back -> resolve the contact via /users/:id
         const items = await Promise.all(
           data.map(async (m) => {
             const contactId = String(m.senderId) === String(myId) ? m.receiverId : m.senderId;
@@ -27,7 +27,7 @@ export default function MessagesPage() {
             try {
               const u = await api.get(`/users/${contactId}`);
               name = u.data.username ?? 'user';
-            } catch { /* contact introuvable -> "user" */ }
+            } catch { /* contact not found -> "user" */ }
             return {
               contactId,
               name,

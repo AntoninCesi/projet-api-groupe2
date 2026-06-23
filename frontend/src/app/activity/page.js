@@ -6,7 +6,7 @@ import BottomNav from '@/components/BottomNav';
 import api from '@/utils/api';
 import { mapNotification } from '@/utils/adapters';
 
-// regroupe les notifs par période d'après createdAt (back trié récent -> ancien)
+// group notifications by period based on createdAt (back sorted recent -> old)
 function groupByPeriod(list) {
   const now = Date.now();
   const day = 24 * 60 * 60 * 1000;
@@ -22,7 +22,7 @@ function groupByPeriod(list) {
 }
 
 export default function ActivityPage() {
-  const [groups, setGroups] = useState(null); // null = chargement
+  const [groups, setGroups] = useState(null); // null = loading
 
   useEffect(() => {
     api.get('/notifications')
@@ -37,7 +37,7 @@ export default function ActivityPage() {
         g?.map((grp) => ({ ...grp, items: grp.items.map((i) => ({ ...i, read: true })) }))
       );
     } catch {
-      /* silencieux : on ne casse pas l'affichage si le mark-read échoue */
+      /* silent: don't break the display if mark-read fails */
     }
   }
 
@@ -58,13 +58,13 @@ export default function ActivityPage() {
         )}
       </div>
 
-      {/* états vides / chargement */}
+      {/* empty / loading states */}
       {groups === null && <p className="mt-8 text-sm text-faint">Loading…</p>}
       {groups && groups.length === 0 && (
         <p className="mt-8 text-sm text-faint">No notifications yet.</p>
       )}
 
-      {/* fil chronologique groupé par période */}
+      {/* chronological feed grouped by period */}
       {groups?.map((group) => (
         <section key={group.label} className="mt-7">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">— {group.label}</h2>

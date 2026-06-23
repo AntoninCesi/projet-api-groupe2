@@ -18,7 +18,7 @@
     science: FlaskConical,
   };
 
-  // topic API -> forme front + ligne meta affichée sous le titre
+  // topic API -> front shape + meta line shown under the title
   const toTopic = (t) => ({
     ...mapTopic(t),
     meta: `${t.postsCount ?? 0} posts · ${t.participantsCount ?? 0} participants`,
@@ -33,14 +33,14 @@
     const [loadingMore, setLoadingMore] = useState(false);
     const [categories, setCategories] = useState([]);
 
-    // catégories (thèmes) chargées une fois
+    // categories (themes) loaded once
     useEffect(() => {
       api.get('/themes')
         .then((res) => setCategories(res.data.map((t) => mapTheme(t))))
         .catch(() => setCategories([]));
     }, []);
 
-    // recherche serveur (debounced) : reset page 1 à chaque frappe
+    // server search (debounced): reset to page 1 on each keystroke
     useEffect(() => {
       const q = query.trim();
       setLoading(true);
@@ -57,7 +57,7 @@
       return () => clearTimeout(id);
     }, [query]);
 
-    // page suivante -> on concatène (search inclus pour paginer aussi les résultats)
+    // next page -> concatenate (search included to also paginate the results)
     const loadMore = useCallback(async () => {
       const q = query.trim();
       const next = page + 1;
@@ -67,7 +67,7 @@
         setTopics((prev) => [...prev, ...res.data.map(toTopic)]);
         setPage(next);
         setHasMore(res.data.length === LIMIT);
-      } catch { /* on garde la liste courante */ }
+      } catch { /* keep the current list */ }
       finally { setLoadingMore(false); }
     }, [query, page]);
 
@@ -103,7 +103,7 @@
           <p className="mt-8 text-center text-sm text-faint">No results for “{query}”.</p>
         ) : (
           <>
-            {/* topics (recherche serveur si query, sinon les plus chauds) */}
+            {/* topics (server search if query, otherwise the hottest) */}
             {topics.length > 0 && (
               <>
                 <h2 className="mt-6 text-sm font-semibold uppercase tracking-wide text-brand">
@@ -115,7 +115,7 @@
                   ))}
                 </div>
 
-                {/* charger plus de résultats */}
+                {/* load more results */}
                 {hasMore && (
                   <button
                     onClick={loadMore}

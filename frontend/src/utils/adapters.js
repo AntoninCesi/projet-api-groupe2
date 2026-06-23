@@ -1,17 +1,17 @@
-// Adaptateurs API (back) -> forme utilisée par le front.
-// Tout le renommage / la mise en forme vit ici = point de couture de l'intégration.
-// utilisé après les appels api.js (fetch) -> mapPost(res.data), etc.
+// API adapters (back) -> shape used by the front.
+// All renaming / formatting lives here = the integration seam.
+// used after api.js calls (fetch) -> mapPost(res.data), etc.
 
 import { formatCount, timeAgo } from '@/utils/format';
 
-// post API -> post front
-// suppose authorId / topicId populate côté back (cf. demande à l'équipe back)
+// API post -> front post
+// assumes authorId / topicId are populated on the back (cf. request to the back team)
 export function mapPost(p, userId) {
   return {
     id: p._id,
     text: p.content,
     author: p.authorId?.username ?? 'unknown',
-    authorId: p.authorId?._id ?? null, // pour le bouton Message (DM l'auteur)
+    authorId: p.authorId?._id ?? null, // for the Message button (DM the author)
     topic: p.topicId?.title ?? null,
     verified: p.authorId?.isVerified ?? false,
     time: timeAgo(p.createdAt),
@@ -19,14 +19,14 @@ export function mapPost(p, userId) {
     liked: hasLiked(p.likes, userId),
     comments: p.comments?.length ?? 0,
     reposts: p.shareCount ?? 0,
-    pinned: false, // pas dans le modèle Post -> false
-    // post d'une source officielle -> onglet Official, sinon Community
+    pinned: false, // not in the Post model -> false
+    // post from an official source -> Official tab, otherwise Community
     tab: p.authorId?.isOfficialSource ? 'official' : 'community',
-    avatar: p.authorId?.avatarUrl || null, // vide/absent -> avatar à initiales
+    avatar: p.authorId?.avatarUrl || null, // empty/absent -> initials avatar
   };
 }
 
-// comment API -> comment front
+// API comment -> front comment
 export function mapComment(c, userId) {
   return {
     ...mapReply(c, userId),
@@ -34,7 +34,7 @@ export function mapComment(c, userId) {
   };
 }
 
-// commentaire ou réponse (même forme, sans le tableau replies)
+// comment or reply (same shape, without the replies array)
 export function mapReply(r, userId) {
   return {
     id: r._id,
@@ -44,13 +44,13 @@ export function mapReply(r, userId) {
     text: r.content,
     likes: r.likes?.length ?? 0,
     liked: hasLiked(r.likes, userId),
-    // id de la réponse à laquelle celle-ci répond (null = répond au commentaire).
-    // rétro-compatible : null tant que le back n'ajoute pas le champ replyTo.
+    // id of the reply this one replies to (null = replies to the comment).
+    // backward-compatible: null until the back adds the replyTo field.
     replyTo: r.replyTo ?? null,
   };
 }
 
-// user API -> profile front (User back n'a que username, pas de name séparé)
+// API user -> front profile (back User only has username, no separate name)
 export function mapProfile(u) {
   return {
     name: u.username,
@@ -61,15 +61,15 @@ export function mapProfile(u) {
     stats: {
       topics: u.followedTopics?.length ?? 0,
       following: u.following?.length ?? 0,
-      followers: u.followersCount ?? 0, // ajouté par GET /users/:id
+      followers: u.followersCount ?? 0, // added by GET /users/:id
       karma: formatCount(u.karma ?? 0),
     },
   };
 }
 
-// notification API -> activity item front
-// le back populate `actorId` (username/avatarUrl/isVerified) -> on affiche le vrai acteur.
-// fallback acteur générique si actorId absent (vieilles notifs / TOPIC_ON_FIRE).
+// API notification -> front activity item
+// the back populates `actorId` (username/avatarUrl/isVerified) -> we display the real actor.
+// generic actor fallback if actorId is absent (old notifs / TOPIC_ON_FIRE).
 const NOTIF_META = {
   LIKE:          { type: 'like',    fallback: 'Someone', text: 'liked your post' },
   FOLLOW:        { type: 'follow',  fallback: 'Someone', text: 'started following you' },
@@ -77,7 +77,7 @@ const NOTIF_META = {
   REPOST:        { type: 'repost',  fallback: 'Someone', text: 'reposted your post' },
   NEW_POST:      { type: 'post',    fallback: 'Someone', text: 'published a new post' },
   TOPIC_ON_FIRE: { type: 'fire',    fallback: 'A topic', text: 'is on fire right now' },
-  // libellés prêts si le back ajoute ces types (sinon les comments/replies arrivent en MENTION)
+  // labels ready if the back adds these types (otherwise comments/replies arrive as MENTION)
   COMMENT:       { type: 'reply',   fallback: 'Someone', text: 'commented on your post' },
   REPLY:         { type: 'reply',   fallback: 'Someone', text: 'replied to you' },
 };
@@ -98,7 +98,7 @@ export function mapNotification(n) {
   };
 }
 
-// lien best-effort selon le sourceType (string libre côté back, sourceId non populé)
+// best-effort link based on sourceType (free string on the back, sourceId not populated)
 function notifLink(sourceType, sourceId) {
   if (!sourceId) return '#';
   const t = String(sourceType || '').toLowerCase();
@@ -107,7 +107,7 @@ function notifLink(sourceType, sourceId) {
   return '#';
 }
 
-// topic API -> topic front
+// API topic -> front topic
 export function mapTopic(t, userId, myFollowedTopics) {
   return {
     id: t._id,
@@ -117,17 +117,17 @@ export function mapTopic(t, userId, myFollowedTopics) {
     official: t.isOfficial ?? false,
     variation: t.variationPct ?? 0,
     participants: formatCount(t.participantsCount ?? 0) + ' participants',
-    avatar: null, // pas dans le modèle Topic -> avatar à initiales
-    // snapshots de chaleur pour la sparkline : [{ t, p }] (vide tant que le job n'a pas tourné)
+    avatar: null, // not in the Topic model -> initials avatar
+    // heat snapshots for the sparkline: [{ t, p }] (empty until the job has run)
     spark: Array.isArray(t.history) ? t.history : [],
-    // suivi = topicId dans les followedTopics du user courant (sinon false)
+    // following = topicId in the current user's followedTopics (otherwise false)
     following: Array.isArray(myFollowedTopics)
       ? myFollowedTopics.some((id) => String(id) === String(t._id))
       : false,
   };
 }
 
-// déduit une icône (clé partagée ThemeCard / explore) à partir du nom de catégorie
+// derives an icon (shared key ThemeCard / explore) from the category name
 export function themeIcon(name = '') {
   const n = name.toLowerCase();
   if (/polit|election|govern|war|geopolit/.test(n)) return 'politics';
@@ -139,7 +139,7 @@ export function themeIcon(name = '') {
   return 'politics';
 }
 
-// theme API (catégorie agrégée) -> theme front (ThemeCard + page /theme)
+// API theme (aggregated category) -> front theme (ThemeCard + /theme page)
 export function mapTheme(t, myFollowedThemes) {
   return {
     id: t.name,
@@ -147,7 +147,7 @@ export function mapTheme(t, myFollowedThemes) {
     degree: t.degree ?? 0,
     topicsCount: t.topicsCount ?? 0,
     actives: formatCount(t.participantsCount ?? 0) + ' active',
-    topic: t.topTopic ?? '', // topic le plus chaud du thème (sous-titre ThemeCard)
+    topic: t.topTopic ?? '', // hottest topic of the theme (ThemeCard subtitle)
     icon: themeIcon(t.name),
     following: Array.isArray(myFollowedThemes)
       ? myFollowedThemes.includes(t.name)
@@ -155,7 +155,7 @@ export function mapTheme(t, myFollowedThemes) {
   };
 }
 
-// likes est un tableau d'ObjectId côté back -> bool "j'ai liké"
+// likes is an array of ObjectId on the back -> bool "I liked it"
 function hasLiked(likes, userId) {
   if (!userId || !Array.isArray(likes)) return false;
   return likes.some((id) => String(id) === String(userId));

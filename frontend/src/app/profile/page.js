@@ -17,13 +17,13 @@ export default function ProfilePage() {
     api.get('/api/auth/me')
       .then(async (res) => {
         setProfile(mapProfile(res.data));
-        // "My Themes" = thèmes suivis -> on récupère leurs stats via /themes
+        // "My Themes" = followed themes -> fetch their stats via /themes
         const followed = res.data.followedThemes ?? [];
         if (followed.length === 0) return;
         try {
           const all = await api.get('/themes');
           setThemes(all.data.filter((t) => followed.includes(t.name)).map((t) => mapTheme(t)));
-        } catch { /* /themes indispo -> on n'affiche rien */ }
+        } catch { /* /themes unavailable -> show nothing */ }
       })
       .catch(() => {});
   }, []);
@@ -42,7 +42,7 @@ export default function ProfilePage() {
         <Link href="/profile/edit" className="text-muted" aria-label="Edit profile"><Settings size={22} /></Link>
       </div>
 
-      {/* identité */}
+      {/* identity */}
       <div className="flex flex-col items-center text-center">
         {avatar ? (
           <img src={avatar} alt={name} className="h-24 w-24 rounded-full object-cover" />
@@ -61,7 +61,7 @@ export default function ProfilePage() {
         <Stat value={stats.karma} label="Karma" />
       </div>
 
-      {/* mes thèmes suivis */}
+      {/* my followed themes */}
       <div className="mt-8 flex items-center justify-between">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-brand">— My Themes</h2>
       </div>

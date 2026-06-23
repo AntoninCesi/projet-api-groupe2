@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Landmark, Trophy, Cpu, TrendingUp, Image, FlaskConical } from 'lucide-react';
 
-// mêmes clés que la page explore (cf. utils/adapters themeIcon)
+// same keys as the explore page (cf. utils/adapters themeIcon)
 const icons = { politics: Landmark, sport: Trophy, tech: Cpu, economy: TrendingUp, culture: Image, science: FlaskConical };
 
 export default function ThemeCard({ theme }) {
@@ -19,7 +19,7 @@ export default function ThemeCard({ theme }) {
         </div>
       </div>
 
-      {/* degré de chaleur + topic le plus chaud */}
+      {/* heat degree + hottest topic */}
       <div className="mt-3 flex items-center gap-2 text-sm">
         <span className="font-title font-bold text-brand">{theme.degree}°</span>
         <span className="truncate text-muted">{theme.topic}</span>

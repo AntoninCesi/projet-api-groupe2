@@ -7,7 +7,7 @@ import SparkLine from '@/components/SparkLine';
 import api from '@/utils/api';
 import { mapTopic, mapTheme } from '@/utils/adapters';
 
-// topics triés par degree (les plus chauds en premier) depuis l'API
+// topics sorted by degree (hottest first) from the API
 async function getTopics() {
   try {
     const res = await api.get('/topics', { params: { limit: 10 } });
@@ -17,7 +17,7 @@ async function getTopics() {
   }
 }
 
-// thèmes (catégories agrégées) les plus chauds depuis l'API
+// hottest themes (aggregated categories) from the API
 async function getThemes() {
   try {
     const res = await api.get('/themes');
@@ -35,7 +35,7 @@ export default async function Home() {
 
   return (
     <main className="mx-auto min-h-screen max-w-md bg-background px-5 pb-28">
-      {/* top bar : marque + user (ou login si déconnecté) */}
+      {/* top bar: brand + user (or login if signed out) */}
       <header className="flex items-center justify-between py-5">
         <Link href="/" className="flex items-baseline gap-1.5">
           <span className="font-title text-xl font-bold text-ink">Trend</span>
@@ -53,13 +53,13 @@ export default async function Home() {
         )}
       </header>
 
-      {/* à la une : sujet le plus chaud */}
+      {/* featured: hottest topic */}
       {featured && (
         <section>
           <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">— Featured</h2>
           <div className="mt-2 flex items-start justify-between gap-3">
             <h1 className="font-title text-3xl font-bold leading-tight text-ink">{featured.title}</h1>
-            {/* jauge de chaleur */}
+            {/* heat gauge */}
             <div className="flex h-20 w-20 shrink-0 flex-col items-center justify-center rounded-full border-4 border-brand">
               <span className="font-title text-xl font-bold text-ink">{featured.degree}°</span>
               {featured.onFire && <span className="text-[9px] font-semibold uppercase tracking-wide text-brand">On fire</span>}
@@ -81,14 +81,14 @@ export default async function Home() {
 
           <p className="mt-3 text-sm text-muted">{featured.participants}</p>
 
-          {/* courbe de chaleur (sparkline) — visible dès que le job a accumulé des points */}
+          {/* heat curve (sparkline) — visible once the job has accumulated points */}
           {featured.spark.length > 1 && (
             <div className="mt-3">
               <SparkLine data={featured.spark} width={320} height={56} />
             </div>
           )}
 
-          {/* lien vers le topic */}
+          {/* link to the topic */}
           <Link
             href={`/topic/${featured.id}`}
             className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-brand-grad py-4 font-semibold text-white shadow-md shadow-brand/30"
@@ -98,7 +98,7 @@ export default async function Home() {
         </section>
       )}
 
-      {/* ça grimpe maintenant */}
+      {/* trending now */}
       <section className="mt-8">
         <div className="flex items-center justify-between">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">— Trending now</h2>
@@ -126,7 +126,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* thèmes les plus chauds (catégories agrégées via GET /themes) */}
+      {/* hottest themes (aggregated categories via GET /themes) */}
       {themes.length > 0 && (
         <section className="mt-8">
           <div className="flex items-center justify-between">

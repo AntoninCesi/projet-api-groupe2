@@ -1,7 +1,7 @@
 import { getToken } from '@/utils/auth';
 
-// petit client fetch qui remplace axios (zéro dépendance).
-// surface gardée : api.get(url, { params }) / api.post(url, body) / api.patch(url, body) -> { data }
+// small fetch client that replaces axios (zero dependency).
+// kept surface: api.get(url, { params }) / api.post(url, body) / api.patch(url, body) -> { data }
 const BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
 async function request(method, path, { params, body } = {}) {
@@ -17,7 +17,7 @@ async function request(method, path, { params, body } = {}) {
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  const data = await res.json().catch(() => null); // réponse vide -> null
+  const data = await res.json().catch(() => null); // empty response -> null
   if (!res.ok) {
     const err = new Error(data?.error || `HTTP ${res.status}`);
     err.response = { data, status: res.status };

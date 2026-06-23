@@ -10,7 +10,7 @@ export const theme = {
   degree: 67,
   change: '+18%',
   window: '24 h',
-  // format Polymarket prices-history : [{ t: unix s, p: prix 0..1 }]
+  // Polymarket prices-history format: [{ t: unix s, p: price 0..1 }]
   spark: [
     { t: 1750000000, p: 0.50 }, { t: 1750021600, p: 0.52 }, { t: 1750043200, p: 0.55 },
     { t: 1750064800, p: 0.54 }, { t: 1750086400, p: 0.60 }, { t: 1750108000, p: 0.63 },

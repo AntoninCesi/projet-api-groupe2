@@ -12,7 +12,7 @@ import { formatCount } from '@/utils/format';
 
 const filters = ['All', 'On fire', 'Official'];
 
-// topic API -> ligne de la liste "Theme topics"
+// topic API -> row in the "Theme topics" list
 function toThemeTopic(t) {
   const m = mapTopic(t);
   return {
@@ -30,7 +30,7 @@ function toThemeTopic(t) {
 }
 
 export default function ThemePage() {
-  const { id } = useParams(); // = nom de catégorie (déjà décodé par Next)
+  const { id } = useParams(); // = category name (already decoded by Next)
   const name = decodeURIComponent(id);
 
   const [theme, setTheme] = useState(null);
@@ -53,23 +53,23 @@ export default function ThemePage() {
       } finally {
         if (alive) setLoading(false);
       }
-      // état "suivi" depuis le profil courant (ignore si non connecté)
+      // "following" state from the current profile (ignored if not signed in)
       try {
         const me = await api.get('/api/auth/me');
         if (alive) setFollowing((me.data.followedThemes ?? []).includes(name));
-      } catch { /* non connecté -> pas suivi */ }
+      } catch { /* not signed in -> not following */ }
     })();
     return () => { alive = false; };
   }, [name]);
 
   async function toggleFollow() {
     const prev = following;
-    setFollowing(!prev); // optimiste
+    setFollowing(!prev); // optimistic
     try {
       const { data } = await api.post(`/themes/${encodeURIComponent(name)}/follow`);
       setFollowing(data.following);
     } catch {
-      setFollowing(prev); // échec (ex. non connecté) -> on revient en arrière
+      setFollowing(prev); // failure (e.g. not signed in) -> roll back
     }
   }
 
@@ -109,7 +109,7 @@ export default function ThemePage() {
         </div>
       </div>
 
-      {/* carte thème */}
+      {/* theme card */}
       <section className="rounded-3xl border border-line bg-white p-5">
         <div className="flex items-center gap-3">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-grad text-white">
@@ -121,7 +121,7 @@ export default function ThemePage() {
           </div>
         </div>
 
-        {/* bouton follow (branché) */}
+        {/* follow button (wired up) */}
         <button
           onClick={toggleFollow}
           className={`mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3 font-semibold ${
@@ -131,7 +131,7 @@ export default function ThemePage() {
           {following ? <>Following <Check size={18} /></> : 'Follow'}
         </button>
 
-        {/* chaleur + courbe (sparkline du topic le plus chaud) */}
+        {/* heat + curve (sparkline of the hottest topic) */}
         <div className="mt-4 flex items-center gap-4 border-t border-line pt-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 border-brand">
             <span className="font-title text-lg font-bold text-ink">{theme.degree}°</span>
@@ -163,7 +163,7 @@ export default function ThemePage() {
         ))}
       </div>
 
-      {/* topics du thème */}
+      {/* theme topics */}
       <div className="mt-6 flex items-center justify-between">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-brand">— Theme topics</h3>
         <Link href="/explore" className="text-sm font-medium text-brand">See all</Link>
