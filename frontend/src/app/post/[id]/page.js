@@ -9,6 +9,8 @@ import Avatar from '@/components/Avatar';
 import api from '@/utils/api';
 import { mapPost, mapComment } from '@/utils/adapters';
 import { getUserId } from '@/utils/auth';
+import MessageButton from '@/components/MessageButton';
+import { post, comments as initialComments } from '@/data/post';
 
 export default function PostPage() {
   const router = useRouter();
@@ -98,6 +100,7 @@ function PostCard({ post }) {
           <span className="font-title text-lg font-semibold text-ink">{post.author}</span>
           {post.verified && <BadgeCheck size={16} className="text-brand" />}
         </div>
+        <MessageButton userId={post.authorId} />
       </div>
       <p className="mt-1 text-xs text-faint">{post.time} ago</p>
 
