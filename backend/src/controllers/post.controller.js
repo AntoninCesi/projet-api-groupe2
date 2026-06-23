@@ -2,6 +2,7 @@ const Post = require('../models/post.model');
 const Activity = require('../models/activity.model');
 const Notification = require('../models/notification.model');
 const User = require('../models/user.model');
+const Topic = require('../models/topic.model');
 
 // Create a post
 const createPost = async (req, res) => {
@@ -22,6 +23,10 @@ const createPost = async (req, res) => {
             targetId: post._id,
         });
 
+        if (post.topicId) {
+            await Topic.findByIdAndUpdate(post.topicId, { $inc: { postsCount: 1 } });
+        }
+
         res.status(201).json(post);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -31,7 +36,11 @@ const createPost = async (req, res) => {
 // Display a post
 const getPost = async (req, res) => {
     try {
-        const post = await Post.findById(req.params.id);
+        const post = await Post.findById(req.params.id)
+            .populate('authorId', 'username avatarUrl isVerified isOfficialSource')
+            .populate('topicId', 'title')
+            .populate('comments.authorId', 'username avatarUrl isVerified isOfficialSource')
+            .populate('comments.replies.authorId', 'username avatarUrl isVerified isOfficialSource');
         if (!post) return res.status(404).json({ error: 'Post not found' });
         res.json(post);
     } catch (err) {
@@ -158,6 +167,8 @@ const listPosts = async (req, res) => {
     const filter = topicId ? { topicId } : {};
     try {
         const posts = await Post.find(filter)
+            .populate('authorId', 'username avatarUrl isVerified isOfficialSource')
+            .populate('topicId', 'title')
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(Number(limit));
@@ -173,6 +184,8 @@ const getFeed = async (req, res) => {
     try {
         const me = await User.findById(req.user.id).select('following');
         const posts = await Post.find({ authorId: { $in: me.following } })
+            .populate('authorId', 'username avatarUrl isVerified isOfficialSource')
+            .populate('topicId', 'title')
             .sort({ createdAt: -1 })
             .skip((page -1) * limit)
             .limit(Number(limit));
