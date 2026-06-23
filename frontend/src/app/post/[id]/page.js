@@ -73,7 +73,7 @@ export default function PostPage() {
 
       <div className="mt-3 space-y-4">
         {comments.map((c) => (
-          <CommentItem key={c.id} comment={c} onReply={addReply} />
+          <CommentItem key={c.id} comment={c} onReply={addReply} postId={id} />
         ))}
       </div>
 
@@ -123,7 +123,7 @@ function PostCard({ post }) {
   );
 }
 
-function CommentItem({ comment, onReply }) {
+function CommentItem({ comment, onReply, postId }) {
   // openId = id de la ligne dont l'input reply est ouvert (commentaire ou reply)
   const [openId, setOpenId] = useState(null);
 
@@ -156,7 +156,11 @@ function CommentItem({ comment, onReply }) {
         {r.replyTo && (
           <p className="mb-0.5 text-xs text-faint">↳ @{authorById[r.replyTo] ?? '…'}</p>
         )}
-        <CommentRow comment={r} onReplyClick={() => toggle(r.id)} />
+        <CommentRow
+          comment={r}
+          onReplyClick={() => toggle(r.id)}
+          likeEndpoint={`/posts/${postId}/comments/${comment.id}/replies/${r.id}/like`}
+        />
         {openId === r.id && <ReplyInput onSubmit={(t) => submit(r.id, t)} />}
         {renderReplies(r.id, depth + 1)}
       </div>
@@ -165,7 +169,11 @@ function CommentItem({ comment, onReply }) {
 
   return (
     <div>
-      <CommentRow comment={comment} onReplyClick={() => toggle(comment.id)} />
+      <CommentRow
+        comment={comment}
+        onReplyClick={() => toggle(comment.id)}
+        likeEndpoint={`/posts/${postId}/comments/${comment.id}/like`}
+      />
       {openId === comment.id && <ReplyInput onSubmit={(t) => submit(null, t)} />}
 
       {/* réponses indentées sous le commentaire (puis décalage par profondeur) */}
@@ -179,7 +187,7 @@ function CommentItem({ comment, onReply }) {
 }
 
 // ligne d'un commentaire ou d'une reply (même rendu, onReplyClick optionnel)
-function CommentRow({ comment, onReplyClick }) {
+function CommentRow({ comment, onReplyClick, likeEndpoint = null }) {
   return (
     <div className="flex gap-2">
       {comment.avatar ? (
@@ -194,7 +202,7 @@ function CommentRow({ comment, onReplyClick }) {
         </div>
         <p className="mt-0.5 text-sm leading-relaxed text-ink">{comment.text}</p>
         <div className="mt-1 flex items-center gap-4 text-xs text-faint">
-          <LikeButton count={comment.likes} size={14} />
+          <LikeButton count={comment.likes} liked={comment.liked} size={14} endpoint={likeEndpoint} />
           {onReplyClick && (
             <button onClick={onReplyClick} className="font-medium text-faint">
               Reply
