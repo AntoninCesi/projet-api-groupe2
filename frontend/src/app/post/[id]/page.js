@@ -37,10 +37,12 @@ export default function PostPage() {
     } catch {}
   }
 
-  // réponse à un commentaire (1 niveau) -> POST puis refetch
-  async function addReply(commentId, text) {
+  // réponse à un commentaire ou à une autre réponse -> POST puis refetch.
+  // replyTo = id de la réponse visée (null = répond au commentaire).
+  // rétro-compatible : le back ignore replyTo tant qu'il ne le gère pas.
+  async function addReply(commentId, text, replyTo = null) {
     try {
-      await api.post(`/posts/${id}/comments/${commentId}/replies`, { content: text });
+      await api.post(`/posts/${id}/comments/${commentId}/replies`, { content: text, replyTo });
       load();
     } catch {}
   }
@@ -73,7 +75,7 @@ export default function PostPage() {
 
       <div className="mt-3 space-y-4">
         {comments.map((c) => (
-          <CommentItem key={c.id} comment={c} onReply={addReply} />
+          <CommentItem key={c.id} comment={c} onReply={addReply} postId={id} />
         ))}
       </div>
 
@@ -95,7 +97,11 @@ function PostCard({ post }) {
       )}
 
       <div className="flex items-center gap-2">
-        <Avatar name={post.author} size={40} />
+        {post.avatar ? (
+          <img src={post.avatar} alt={post.author} className="h-10 w-10 rounded-full object-cover" />
+        ) : (
+          <Avatar name={post.author} size={40} />
+        )}
         <div className="flex flex-1 items-center gap-1">
           <span className="font-title text-lg font-semibold text-ink">{post.author}</span>
           {post.verified && <BadgeCheck size={16} className="text-brand" />}
@@ -120,7 +126,7 @@ function PostCard({ post }) {
   );
 }
 
-function CommentItem({ comment, onReply }) {
+function CommentItem({ comment, onReply, postId }) {
   // openId = id de la ligne dont l'input reply est ouvert (commentaire ou reply)
   const [openId, setOpenId] = useState(null);
 
@@ -128,26 +134,55 @@ function CommentItem({ comment, onReply }) {
     setOpenId(openId === id ? null : id);
   }
 
-  // une reply va toujours sur le commentaire parent (1 seul niveau, voir CLAUDE.md)
-  function submit(text) {
-    onReply(comment.id, text);
+  // soumet une réponse en gardant la cible (replyTo) -> back via le commentaire parent
+  function submit(replyTo, text) {
+    onReply(comment.id, text, replyTo);
     setOpenId(null);
+  }
+
+  // les réponses sont à plat dans comment.replies, chacune avec un replyTo éventuel.
+  // on reconstruit l'arbre : 'root' = réponses directes au commentaire.
+  const byParent = {};
+  for (const r of comment.replies) {
+    const key = r.replyTo || 'root';
+    (byParent[key] ||= []).push(r);
+  }
+  // id de réponse -> auteur, pour afficher "↳ @auteur"
+  const authorById = Object.fromEntries(comment.replies.map((r) => [r.id, r.author]));
+
+  // rendu récursif : décalage progressif plafonné (lisible même très imbriqué)
+  function renderReplies(parentId, depth) {
+    const list = byParent[parentId];
+    if (!list) return null;
+    return list.map((r) => (
+      <div key={r.id} className="mt-3" style={{ marginLeft: Math.min(depth, 2) * 14 }}>
+        {r.replyTo && (
+          <p className="mb-0.5 text-xs text-faint">↳ @{authorById[r.replyTo] ?? '…'}</p>
+        )}
+        <CommentRow
+          comment={r}
+          onReplyClick={() => toggle(r.id)}
+          likeEndpoint={`/posts/${postId}/comments/${comment.id}/replies/${r.id}/like`}
+        />
+        {openId === r.id && <ReplyInput onSubmit={(t) => submit(r.id, t)} />}
+        {renderReplies(r.id, depth + 1)}
+      </div>
+    ));
   }
 
   return (
     <div>
-      <CommentRow comment={comment} onReplyClick={() => toggle(comment.id)} />
-      {openId === comment.id && <ReplyInput onSubmit={submit} />}
+      <CommentRow
+        comment={comment}
+        onReplyClick={() => toggle(comment.id)}
+        likeEndpoint={`/posts/${postId}/comments/${comment.id}/like`}
+      />
+      {openId === comment.id && <ReplyInput onSubmit={(t) => submit(null, t)} />}
 
-      {/* replies indentées (1 niveau) */}
+      {/* réponses indentées sous le commentaire (puis décalage par profondeur) */}
       {comment.replies.length > 0 && (
-        <div className="ml-5 mt-3 space-y-3 border-l border-line pl-4">
-          {comment.replies.map((r) => (
-            <div key={r.id}>
-              <CommentRow comment={r} onReplyClick={() => toggle(r.id)} />
-              {openId === r.id && <ReplyInput onSubmit={submit} />}
-            </div>
-          ))}
+        <div className="ml-5 mt-3 border-l border-line pl-4">
+          {renderReplies('root', 0)}
         </div>
       )}
     </div>
@@ -155,10 +190,14 @@ function CommentItem({ comment, onReply }) {
 }
 
 // ligne d'un commentaire ou d'une reply (même rendu, onReplyClick optionnel)
-function CommentRow({ comment, onReplyClick }) {
+function CommentRow({ comment, onReplyClick, likeEndpoint = null }) {
   return (
     <div className="flex gap-2">
-      <Avatar name={comment.author} size={32} />
+      {comment.avatar ? (
+        <img src={comment.avatar} alt={comment.author} className="h-8 w-8 rounded-full object-cover" />
+      ) : (
+        <Avatar name={comment.author} size={32} />
+      )}
       <div className="flex-1">
         <div className="flex items-center gap-1">
           <span className="text-sm font-semibold text-ink">{comment.author}</span>
@@ -166,7 +205,7 @@ function CommentRow({ comment, onReplyClick }) {
         </div>
         <p className="mt-0.5 text-sm leading-relaxed text-ink">{comment.text}</p>
         <div className="mt-1 flex items-center gap-4 text-xs text-faint">
-          <LikeButton count={comment.likes} size={14} />
+          <LikeButton count={comment.likes} liked={comment.liked} size={14} endpoint={likeEndpoint} />
           {onReplyClick && (
             <button onClick={onReplyClick} className="font-medium text-faint">
               Reply

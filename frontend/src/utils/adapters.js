@@ -44,6 +44,9 @@ export function mapReply(r, userId) {
     text: r.content,
     likes: r.likes?.length ?? 0,
     liked: hasLiked(r.likes, userId),
+    // id de la réponse à laquelle celle-ci répond (null = répond au commentaire).
+    // rétro-compatible : null tant que le back n'ajoute pas le champ replyTo.
+    replyTo: r.replyTo ?? null,
   };
 }
 
@@ -62,6 +65,43 @@ export function mapProfile(u) {
       karma: formatCount(u.karma ?? 0),
     },
   };
+}
+
+// notification API -> activity item front
+// NB: le back ne populate PAS sourceId -> pas de pseudo/texte réel.
+// On dérive un libellé à partir du `type` (acteur générique).
+const NOTIF_META = {
+  LIKE:          { type: 'like',    actor: 'Someone', text: 'liked your post' },
+  FOLLOW:        { type: 'follow',  actor: 'Someone', text: 'started following you' },
+  MENTION:       { type: 'mention', actor: 'Someone', text: 'mentioned you' },
+  REPOST:        { type: 'repost',  actor: 'Someone', text: 'reposted your post' },
+  NEW_POST:      { type: 'post',    actor: 'Someone', text: 'published a new post' },
+  TOPIC_ON_FIRE: { type: 'fire',    actor: 'A topic', text: 'is on fire right now' },
+  // libellés prêts si le back ajoute ces types (sinon les comments/replies arrivent en MENTION)
+  COMMENT:       { type: 'reply',   actor: 'Someone', text: 'commented on your post' },
+  REPLY:         { type: 'reply',   actor: 'Someone', text: 'replied to you' },
+};
+
+export function mapNotification(n) {
+  const meta = NOTIF_META[n.type] ?? { type: 'like', actor: 'Someone', text: 'sent you a notification' };
+  return {
+    id: n._id,
+    type: meta.type,
+    actor: meta.actor,
+    text: meta.text,
+    time: timeAgo(n.createdAt),
+    read: n.isRead ?? false,
+    link: notifLink(n.sourceType, n.sourceId),
+  };
+}
+
+// lien best-effort selon le sourceType (string libre côté back, sourceId non populé)
+function notifLink(sourceType, sourceId) {
+  if (!sourceId) return '#';
+  const t = String(sourceType || '').toLowerCase();
+  if (t.includes('post')) return `/post/${sourceId}`;
+  if (t.includes('topic')) return `/topic/${sourceId}`;
+  return '#';
 }
 
 // topic API -> topic front

@@ -5,6 +5,7 @@ const replySchema = new Schema({
     authorId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     content: { type: String, required: true, maxlength: 280 },
     likes: { type: [Schema.Types.ObjectId], ref: 'User', default: [] },
+    replyTo: { type: Schema.Types.ObjectId, default: null },
 }, { timestamps: true });
 
 const commentSchema = new Schema({

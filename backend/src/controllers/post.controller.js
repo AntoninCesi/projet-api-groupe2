@@ -2,6 +2,7 @@ const Post = require('../models/post.model');
 const Activity = require('../models/activity.model');
 const Notification = require('../models/notification.model');
 const User = require('../models/user.model');
+const Topic = require('../models/topic.model');
 
 // Create a post
 const createPost = async (req, res) => {
@@ -22,6 +23,10 @@ const createPost = async (req, res) => {
             targetId: post._id,
         });
 
+        if (post.topicId) {
+            await Topic.findByIdAndUpdate(post.topicId, { $inc: { postsCount: 1 } });
+        }
+
         res.status(201).json(post);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -31,7 +36,11 @@ const createPost = async (req, res) => {
 // Display a post
 const getPost = async (req, res) => {
     try {
-        const post = await Post.findById(req.params.id);
+        const post = await Post.findById(req.params.id)
+            .populate('authorId', 'username avatarUrl isVerified isOfficialSource')
+            .populate('topicId', 'title')
+            .populate('comments.authorId', 'username avatarUrl isVerified isOfficialSource')
+            .populate('comments.replies.authorId', 'username avatarUrl isVerified isOfficialSource');
         if (!post) return res.status(404).json({ error: 'Post not found' });
         res.json(post);
     } catch (err) {
@@ -42,7 +51,7 @@ const getPost = async (req, res) => {
 // Like / Unlike a post (toggle)
 const likePost = async (req, res) => {
     try {
-        const post =await Post.findById(req.params.id);
+        const post = await Post.findById(req.params.id);
         if (!post) return res.status(404).json({ error: 'Post not found' });
 
         const userId = req.user.id;
@@ -67,6 +76,7 @@ const likePost = async (req, res) => {
         if (!post.authorId.equals(userId)) {
             await Notification.create({
                 userId: post.authorId,
+                actorId: userId,
                 type: 'LIKE',
                 sourceType: 'Post',
                 sourceId: post._id,
@@ -102,9 +112,10 @@ const addComment = async (req, res) => {
         if (!post.authorId.equals(req.user.id)) {
             await Notification.create({
                 userId: post.authorId,
+                actorId: req.user.id,
                 type: 'MENTION',
-                sourceType: 'Comment',
-                sourceId: savedComment._id,
+                sourceType: 'Post',
+                sourceId: post._id,
             });
         }
 
@@ -116,7 +127,7 @@ const addComment = async (req, res) => {
 
 // Add a reply on a comment
 const addReply = async (req, res) => {
-    const { content } = req.body;
+    const { content, replyTo } = req.body;
     try {
         const post = await Post.findById(req.params.id);
         if (!post) return res.status(404).json({ error: 'Post not found' });
@@ -124,7 +135,7 @@ const addReply = async (req, res) => {
         const comment = post.comments.id(req.params.commentId);
         if (!comment) return res.status(404).json({ error: 'Comment not found' });
 
-        const reply = { authorId: req.user.id, content };
+        const reply = { authorId: req.user.id, content, replyTo: replyTo || null };
         comment.replies.push(reply);
         await post.save();
 
@@ -140,9 +151,10 @@ const addReply = async (req, res) => {
         if (!comment.authorId.equals(req.user.id)) {
             await Notification.create({
                 userId: comment.authorId,
+                actorId: req.user.id,
                 type: 'MENTION',
-                sourceType: 'Reply',
-                sourceId: savedReply._id,
+                sourceType: 'Post',
+                sourceId: post._id,
             });
         }
 
@@ -152,12 +164,54 @@ const addReply = async (req, res) => {
     }
 };
 
-// list all posts
+// Toggle like on a comment
+const likeComment = async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+        const comment = post.comments.id(req.params.commentId);
+        if (!comment) return res.status(404).json({ error: 'Comment not found' });
+
+        const userId = req.user.id;
+        const already = comment.likes.some(id => id.equals(userId));
+        already ? comment.likes.pull(userId) : comment.likes.push(userId);
+        await post.save();
+
+        res.json({ liked: !already, likesCount: comment.likes.length });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// Toggle like on a reply
+const likeReply = async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+        const comment = post.comments.id(req.params.commentId);
+        if (!comment) return res.status(404).json({ error: 'Comment not found' });
+        const reply = comment.replies.id(req.params.replyId);
+        if (!reply) return res.status(404).json({ error: 'Reply not found' });
+
+        const userId = req.user.id;
+        const already = reply.likes.some(id => id.equals(userId));
+        already ? reply.likes.pull(userId) : reply.likes.push(userId);
+        await post.save();
+
+        res.json({ liked: !already, likesCount: reply.likes.length });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// List all posts
 const listPosts = async (req, res) => {
     const { topicId, page = 1, limit = 20 } = req.query;
     const filter = topicId ? { topicId } : {};
     try {
         const posts = await Post.find(filter)
+            .populate('authorId', 'username avatarUrl isVerified isOfficialSource')
+            .populate('topicId', 'title')
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(Number(limit));
@@ -167,14 +221,16 @@ const listPosts = async (req, res) => {
     }
 };
 
-// chronological feed (from followed users)
+// Chronological feed (from followed users)
 const getFeed = async (req, res) => {
     const { page = 1, limit = 20 } = req.query;
     try {
         const me = await User.findById(req.user.id).select('following');
         const posts = await Post.find({ authorId: { $in: me.following } })
+            .populate('authorId', 'username avatarUrl isVerified isOfficialSource')
+            .populate('topicId', 'title')
             .sort({ createdAt: -1 })
-            .skip((page -1) * limit)
+            .skip((page - 1) * limit)
             .limit(Number(limit));
         res.json(posts);
     } catch (err) {
@@ -182,4 +238,4 @@ const getFeed = async (req, res) => {
     }
 };
 
-module.exports = { createPost, getPost, likePost, addComment, addReply, listPosts, getFeed };
+module.exports = { createPost, getPost, likePost, addComment, addReply, likeComment, likeReply, listPosts, getFeed };

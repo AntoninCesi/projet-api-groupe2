@@ -38,6 +38,7 @@ const followUser = async (req, res) => {
 
         await Notification.create({
             userId: target._id,
+            actorId: me._id,
             type: 'FOLLOW',
             sourceType: 'User',
             sourceId: me._id,
@@ -50,4 +51,30 @@ const followUser = async (req, res) => {
     }
 };
 
-module.exports = { getProfile, followUser };
+// modifier son propre profil (username / bio / avatarUrl)
+const updateMe = async (req, res) => {
+    try {
+        const { username, bio, avatarUrl } = req.body;
+        const updates = {};
+        if (username !== undefined) updates.username = username;
+        if (bio !== undefined) updates.bio = bio;
+        if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+
+        // unicité du username si modifié
+        if (updates.username) {
+            const taken = await User.findOne({ username: updates.username, _id: { $ne: req.user.id } });
+            if (taken) return res.status(409).json({ error: 'Username already taken' });
+        }
+
+        const user = await User.findByIdAndUpdate(req.user.id, updates, {
+            new: true,
+            runValidators: true,
+        }).select('-password');
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { getProfile, followUser, updateMe };

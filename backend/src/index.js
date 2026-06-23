@@ -5,6 +5,8 @@ const postRoutes = require('./routes/post.routes');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const topicRoutes = require('./routes/topic.routes');
+const notificationRoutes = require('./routes/notification.routes');
+const messageRoutes = require('./routes/message.routes');
 const { startSyncJob } = require('./jobs/polymarketSync');
 const cors = require('cors');
 
@@ -16,6 +18,8 @@ app.use('/posts', postRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/users', userRoutes);
 app.use('/topics', topicRoutes);
+app.use('/notifications', notificationRoutes);
+app.use('/messages', messageRoutes);
 
 const PORT = process.env.PORT || 3000;
 

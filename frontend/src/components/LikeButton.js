@@ -5,11 +5,15 @@ import { Heart } from 'lucide-react';
 import { formatCount } from '@/utils/format';
 import api from '@/utils/api';
 
-// like : si postId fourni -> POST /posts/:id/like (toggle, renvoie {liked, likesCount})
-// sinon (commentaires, pas d'endpoint back) -> état local seulement
-export default function LikeButton({ count, liked: initialLiked = false, size = 16, postId = null }) {
+// like (toggle, l'API renvoie {liked, likesCount}) :
+//  - endpoint fourni -> POST sur cet endpoint (commentaire / réponse)
+//  - sinon postId -> POST /posts/:id/like
+//  - sinon -> état local seulement
+export default function LikeButton({ count, liked: initialLiked = false, size = 16, postId = null, endpoint = null }) {
   const [liked, setLiked] = useState(initialLiked);
   const [n, setN] = useState(count);
+
+  const url = endpoint || (postId ? `/posts/${postId}/like` : null);
 
   async function toggle(e) {
     // évite la navigation quand le bouton est dans un <Link> (liste de posts)
@@ -22,9 +26,9 @@ export default function LikeButton({ count, liked: initialLiked = false, size = 
     setLiked(!liked);
     setN(liked ? n - 1 : n + 1);
 
-    if (!postId) return; // commentaire -> local seulement
+    if (!url) return; // pas d'endpoint -> local seulement
     try {
-      const res = await api.post(`/posts/${postId}/like`);
+      const res = await api.post(url);
       setLiked(res.data.liked);
       setN(res.data.likesCount);
     } catch {
