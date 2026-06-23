@@ -57,8 +57,8 @@ export default function TopicPicker({ topics, value, onChange }) {
       </button>
 
       {open && (
-        <div className="glass absolute z-20 mt-2 w-80 rounded-2xl p-2 shadow-pop">
-          <div className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2">
+        <div className="glass glass-lg absolute z-20 mt-2 w-80 rounded-2xl p-2">
+          <div className="flex items-center gap-2 rounded-xl border border-white/60 bg-white/50 px-3 py-2">
             <Search size={15} className="text-faint" />
             <input
               autoFocus
