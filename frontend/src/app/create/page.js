@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, Globe, Image as ImageIcon, BarChart2, Link2, Clapperboard } from 'lucide-react';
 import Avatar from '@/components/Avatar';
+import Shell from '@/components/Shell';
 import api from '@/utils/api';
 import { mapProfile } from '@/utils/adapters';
 
@@ -45,9 +46,9 @@ export default function CreatePage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col bg-background px-5">
+    <Shell>
       {/* header */}
-      <div className="flex items-center justify-between pt-4">
+      <div className="flex items-center justify-between pt-4 lg:pt-0">
         <button onClick={() => router.back()} className="text-sm text-muted">
           Cancel
         </button>
@@ -122,9 +123,7 @@ export default function CreatePage() {
         <span className={`text-sm ${remaining <= 20 ? 'text-press' : 'text-faint'}`}>{remaining}</span>
       </div>
 
-      {/* l'espace vide ci-dessous laisse la place au clavier du téléphone */}
-      <div className="flex-1" />
-    </main>
+    </Shell>
   );
 }
 

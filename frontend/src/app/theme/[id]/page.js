@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Leaf, Check, Flame, BadgeCheck, TrendingUp, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import BottomNav from '@/components/BottomNav';
+import Shell from '@/components/Shell';
 import SparkLine from '@/components/SparkLine';
 import { theme } from '@/data/theme';
 
@@ -19,9 +19,9 @@ export default function ThemePage() {
   );
 
   return (
-    <main className="mx-auto min-h-screen max-w-md bg-background px-5 pb-28">
+    <Shell>
       {/* header */}
-      <div className="flex items-center gap-3 py-5">
+      <div className="flex items-center gap-3 py-5 lg:pt-0">
         <Link href="/" aria-label="Back" className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-ink">
           <ArrowLeft size={18} />
         </Link>
@@ -130,7 +130,6 @@ export default function ThemePage() {
         ))}
       </div>
 
-      <BottomNav />
-    </main>
+    </Shell>
   );
 }

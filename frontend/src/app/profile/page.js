@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Settings } from 'lucide-react';
 import ThemeCard from '@/components/ThemeCard';
-import BottomNav from '@/components/BottomNav';
+import Shell from '@/components/Shell';
 import Avatar from '@/components/Avatar';
 import api from '@/utils/api';
 import { mapProfile } from '@/utils/adapters';
@@ -26,9 +26,9 @@ export default function ProfilePage() {
   const themes = mockProfile.themes;
 
   return (
-    <main className="mx-auto min-h-screen max-w-md bg-background px-5 pb-28">
+    <Shell>
       {/* header */}
-      <div className="flex justify-end py-4">
+      <div className="flex justify-end py-4 lg:pt-0">
         <Link href="/profile/edit" className="text-muted" aria-label="Edit profile"><Settings size={22} /></Link>
       </div>
 
@@ -61,8 +61,7 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      <BottomNav />
-    </main>
+    </Shell>
   );
 }
 

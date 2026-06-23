@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, MessageCircle, Repeat2, BadgeCheck, ChevronDown, Pin } from 'lucide-react';
-import BottomNav from '@/components/BottomNav';
+import Shell from '@/components/Shell';
 import LikeButton from '@/components/LikeButton';
 import Avatar from '@/components/Avatar';
 import api from '@/utils/api';
@@ -46,9 +46,9 @@ export default function PostPage() {
   const total = comments.reduce((n, c) => n + 1 + c.replies.length, 0);
 
   return (
-    <main className="mx-auto min-h-screen max-w-md bg-background px-5 pb-28">
+    <Shell>
       {/* header */}
-      <div className="flex items-center gap-3 pt-4">
+      <div className="flex items-center gap-3 pt-4 lg:pt-0">
         <button onClick={() => router.back()} aria-label="Back" className="text-ink">
           <ArrowLeft size={22} />
         </button>
@@ -76,9 +76,7 @@ export default function PostPage() {
       </div>
 
       <Composer onSubmit={addComment} />
-
-      <BottomNav />
-    </main>
+    </Shell>
   );
 }
 

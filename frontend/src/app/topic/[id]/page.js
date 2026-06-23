@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { ArrowLeft, MoreHorizontal, MessageCircle, Repeat2, BadgeCheck, Pin } from 'lucide-react';
-import BottomNav from '@/components/BottomNav';
+import Shell from '@/components/Shell';
 import LikeButton from '@/components/LikeButton';
 import Avatar from '@/components/Avatar';
 import api from '@/utils/api';
@@ -30,9 +30,9 @@ export default function TopicPage() {
   const visible = posts.filter((p) => p.tab === tab);
 
   return (
-    <main className="mx-auto min-h-screen max-w-md bg-background px-5 pb-28">
+    <Shell>
       {/* header */}
-      <div className="flex items-center gap-3 pt-4">
+      <div className="flex items-center gap-3 pt-4 lg:pt-0">
         <Link href="/explore" aria-label="Back" className="text-ink">
           <ArrowLeft size={22} />
         </Link>
@@ -66,8 +66,7 @@ export default function TopicPage() {
         ))}
       </div>
 
-      <BottomNav />
-    </main>
+    </Shell>
   );
 }
 

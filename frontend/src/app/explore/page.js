@@ -1,20 +1,19 @@
 import Link from 'next/link';
 import { Search, ChevronRight, Landmark, Trophy, Cpu, TrendingUp, Image, FlaskConical } from 'lucide-react';
-import BottomNav from '@/components/BottomNav';
+import Shell from '@/components/Shell';
 import api from '@/utils/api';
 import { mapTopic } from '@/utils/adapters';
 import { explore } from '@/data/explore';
 
-// topics les plus chauds depuis l'API (triés par degree côté back)
 async function getHotTopics() {
   try {
-    const res = await api.get('/topics', { params: { limit: 10 } });
+    const res = await api.get('/topics', { params: { limit: 12 } });
     return res.data.map((t) => ({
       ...mapTopic(t),
       meta: `${t.postsCount ?? 0} posts · ${t.participantsCount ?? 0} participants`,
     }));
   } catch {
-    return []; // back indispo -> liste vide plutôt que crash
+    return [];
   }
 }
 
@@ -32,17 +31,14 @@ export default async function ExplorePage() {
   const { categories } = explore;
 
   return (
-    <main className="mx-auto min-h-screen max-w-md bg-background px-5 pb-28">
-      {/* header */}
-      <div className="pt-6">
-        <h1 className="font-title text-3xl font-bold text-ink">Explore</h1>
+    <Shell>
+      <div className="pt-6 lg:pt-0">
+        <h1 className="font-title text-3xl font-bold text-ink lg:text-4xl">Explore</h1>
         <p className="mt-1 text-sm text-muted">Find hot topics or start deep diving by category</p>
       </div>
 
-      {/* search */}
-      <div className="mt-4 flex items-center gap-2 rounded-2xl border border-line bg-white px-4 py-3">
+      <div className="glass mt-5 flex items-center gap-2.5 rounded-2xl px-4 py-3.5">
         <Search size={18} className="text-faint" />
-        {/* shortcut: champ non branché (pas de recherche back) */}
         <input
           type="text"
           placeholder="Search a topic or a theme…"
@@ -50,30 +46,26 @@ export default async function ExplorePage() {
         />
       </div>
 
-      {/* trending */}
-      <h2 className="mt-6 text-sm font-semibold uppercase tracking-wide text-brand">— Hot trends</h2>
+      <h2 className="mt-7 text-xs font-semibold uppercase tracking-wide text-brand">Hot trends</h2>
       <div className="mt-3 space-y-3">
         {hot.map((t) => (
           <HotTopic key={t.id} topic={t} />
         ))}
       </div>
 
-      {/* themes */}
-      <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-brand">— Themes</h2>
+      <h2 className="mt-8 text-xs font-semibold uppercase tracking-wide text-brand">Themes</h2>
       <div className="mt-3 grid grid-cols-2 gap-3">
         {categories.map((c) => (
           <CategoryCard key={c.id} category={c} />
         ))}
       </div>
-
-      <BottomNav />
-    </main>
+    </Shell>
   );
 }
 
 function HotTopic({ topic }) {
   return (
-    <Link href={`/topic/${topic.id}`} className="flex w-full items-center gap-3 rounded-2xl border border-line bg-white p-3 text-left">
+    <Link href={`/topic/${topic.id}`} className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface p-3 text-left transition hover:border-brand/40 hover:shadow-soft">
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand/10 font-title font-bold text-brand">
         {topic.degree}°
       </div>
@@ -89,7 +81,7 @@ function HotTopic({ topic }) {
 function CategoryCard({ category }) {
   const Icon = categoryIcons[category.icon] ?? Landmark;
   return (
-    <Link href={category.link} className="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 text-left">
+    <Link href={category.link} className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 text-left transition hover:border-brand/40 hover:shadow-soft">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
         <Icon size={18} />
       </div>

@@ -1,12 +1,12 @@
 import ActivityItem from '@/components/ActivityItem';
-import BottomNav from '@/components/BottomNav';
+import Shell from '@/components/Shell';
 import { activity } from '@/data/activity';
 
 export default function ActivityPage() {
   return (
-    <main className="mx-auto min-h-screen max-w-md bg-background px-5 pb-28">
+    <Shell>
       {/* header */}
-      <div className="pt-8">
+      <div className="pt-8 lg:pt-0">
         <h1 className="font-title text-3xl font-bold text-ink">Notifications</h1>
         <p className="mt-1 text-faint">What's moving around you.</p>
       </div>
@@ -23,7 +23,6 @@ export default function ActivityPage() {
         </section>
       ))}
 
-      <BottomNav active="activity" />
-    </main>
+    </Shell>
   );
 }
