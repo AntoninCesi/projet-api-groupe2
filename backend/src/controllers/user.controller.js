@@ -38,6 +38,7 @@ const followUser = async (req, res) => {
 
         await Notification.create({
             userId: target._id,
+            actorId: me._id,
             type: 'FOLLOW',
             sourceType: 'User',
             sourceId: me._id,
