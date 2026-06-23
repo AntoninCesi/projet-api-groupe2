@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, Globe, Image as ImageIcon, BarChart2, Link2, Clapperboard } from 'lucide-react';
+import { Globe, Image as ImageIcon, BarChart2, Link2, Clapperboard } from 'lucide-react';
 import Avatar from '@/components/Avatar';
 import Shell from '@/components/Shell';
+import TopicPicker from '@/components/TopicPicker';
 import api from '@/utils/api';
 import { mapProfile } from '@/utils/adapters';
 
@@ -14,15 +15,14 @@ export default function CreatePage() {
   const router = useRouter();
   const [text, setText] = useState('');
   const [topics, setTopics] = useState([]);
-  const [topic, setTopic] = useState(null); // { id, title }
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [topic, setTopic] = useState(null);
   const [me, setMe] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
     api.get('/topics', { params: { limit: 50 } })
       .then((res) => {
-        const list = res.data.map((t) => ({ id: t._id, title: t.title }));
+        const list = res.data.map((t) => ({ id: t._id, title: t.title, category: t.category }));
         setTopics(list);
         setTopic(list[0] ?? null);
       })
@@ -62,32 +62,8 @@ export default function CreatePage() {
         </button>
       </div>
 
-      {/* sélecteur de topic */}
-      <div className="relative mt-4 w-fit">
-        <button
-          onClick={() => setPickerOpen(!pickerOpen)}
-          className="flex items-center gap-1 rounded-full bg-brand/10 px-3 py-1.5 text-sm"
-        >
-          <span className="text-faint">In</span>
-          <span className="font-medium text-press">{topic?.title ?? 'Select a topic'}</span>
-          <ChevronDown size={14} className="text-press" />
-        </button>
-        {pickerOpen && (
-          <div className="absolute z-10 mt-1 max-h-72 w-64 overflow-auto rounded-2xl border border-line bg-white p-1 shadow-lg">
-            {topics.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => {
-                  setTopic(t);
-                  setPickerOpen(false);
-                }}
-                className={`block w-full rounded-xl px-3 py-2 text-left text-sm ${t.id === topic?.id ? 'font-medium text-press' : 'text-ink'}`}
-              >
-                {t.title}
-              </button>
-            ))}
-          </div>
-        )}
+      <div className="mt-4">
+        <TopicPicker topics={topics} value={topic} onChange={setTopic} />
       </div>
 
       {/* auteur + visibilité */}
