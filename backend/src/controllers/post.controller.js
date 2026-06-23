@@ -51,7 +51,7 @@ const getPost = async (req, res) => {
 // Like / Unlike a post (toggle)
 const likePost = async (req, res) => {
     try {
-        const post =await Post.findById(req.params.id);
+        const post = await Post.findById(req.params.id);
         if (!post) return res.status(404).json({ error: 'Post not found' });
 
         const userId = req.user.id;
@@ -114,8 +114,8 @@ const addComment = async (req, res) => {
                 userId: post.authorId,
                 actorId: req.user.id,
                 type: 'MENTION',
-                sourceType: 'Comment',
-                sourceId: savedComment._id,
+                sourceType: 'Post',
+                sourceId: post._id,
             });
         }
 
@@ -127,7 +127,7 @@ const addComment = async (req, res) => {
 
 // Add a reply on a comment
 const addReply = async (req, res) => {
-    const { content } = req.body;
+    const { content, replyTo } = req.body;
     try {
         const post = await Post.findById(req.params.id);
         if (!post) return res.status(404).json({ error: 'Post not found' });
@@ -135,7 +135,7 @@ const addReply = async (req, res) => {
         const comment = post.comments.id(req.params.commentId);
         if (!comment) return res.status(404).json({ error: 'Comment not found' });
 
-        const reply = { authorId: req.user.id, content };
+        const reply = { authorId: req.user.id, content, replyTo: replyTo || null };
         comment.replies.push(reply);
         await post.save();
 
@@ -153,8 +153,8 @@ const addReply = async (req, res) => {
                 userId: comment.authorId,
                 actorId: req.user.id,
                 type: 'MENTION',
-                sourceType: 'Reply',
-                sourceId: savedReply._id,
+                sourceType: 'Post',
+                sourceId: post._id,
             });
         }
 
@@ -190,7 +190,7 @@ const getFeed = async (req, res) => {
             .populate('authorId', 'username avatarUrl isVerified isOfficialSource')
             .populate('topicId', 'title')
             .sort({ createdAt: -1 })
-            .skip((page -1) * limit)
+            .skip((page - 1) * limit)
             .limit(Number(limit));
         res.json(posts);
     } catch (err) {
