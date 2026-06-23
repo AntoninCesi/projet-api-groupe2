@@ -31,8 +31,8 @@ function FollowRow({ name, sub, initial }) {
 
 export default function RailHome() {
   return (
-    <aside className="sticky top-0 hidden h-screen flex-col gap-5 overflow-y-auto border-l border-line px-6 py-6 lg:flex">
-      <div className="flex h-12 items-center gap-2.5 rounded-2xl border border-line bg-white px-4 text-faint">
+    <aside className="sticky top-0 hidden h-screen flex-col gap-5 overflow-y-auto border-l border-white/60 bg-white/45 px-6 py-6 backdrop-blur-2xl backdrop-saturate-150 lg:flex">
+      <div className="glass flex h-12 items-center gap-2.5 rounded-2xl px-4 text-faint">
         <Search size={18} />
         <input
           placeholder="Search a topic…"

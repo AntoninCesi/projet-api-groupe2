@@ -27,7 +27,7 @@ export default function Sidebar() {
   }, []);
 
   return (
-    <aside className="sticky top-0 hidden h-screen flex-col gap-1 overflow-y-auto border-r border-line px-5 py-6 lg:flex">
+    <aside className="sticky top-0 hidden h-screen flex-col gap-1 overflow-y-auto border-r border-white/60 bg-white/45 px-5 py-6 backdrop-blur-2xl backdrop-saturate-150 lg:flex">
       <Link href="/" className="mb-3 flex items-baseline gap-2 px-3">
         <span className="relative font-title text-[25px] font-bold tracking-[-0.7px] text-ink">
           Trend
