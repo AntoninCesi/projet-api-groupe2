@@ -31,7 +31,11 @@ const createPost = async (req, res) => {
 // Display a post
 const getPost = async (req, res) => {
     try {
-        const post = await Post.findById(req.params.id);
+        const post = await Post.findById(req.params.id)
+            .populate('authorId', 'username avatarUrl isVerified isOfficialSource')
+            .populate('topicId', 'title')
+            .populate('comments.authorId', 'username avatarUrl isVerified isOfficialSource')
+            .populate('comments.replies.authorId', 'username avatarUrl isVerified isOfficialSource');
         if (!post) return res.status(404).json({ error: 'Post not found' });
         res.json(post);
     } catch (err) {
@@ -158,6 +162,8 @@ const listPosts = async (req, res) => {
     const filter = topicId ? { topicId } : {};
     try {
         const posts = await Post.find(filter)
+            .populate('authorId', 'username avatarUrl isVerified isOfficialSource')
+            .populate('topicId', 'title')
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(Number(limit));
@@ -173,6 +179,8 @@ const getFeed = async (req, res) => {
     try {
         const me = await User.findById(req.user.id).select('following');
         const posts = await Post.find({ authorId: { $in: me.following } })
+            .populate('authorId', 'username avatarUrl isVerified isOfficialSource')
+            .populate('topicId', 'title')
             .sort({ createdAt: -1 })
             .skip((page -1) * limit)
             .limit(Number(limit));
