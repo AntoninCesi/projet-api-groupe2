@@ -1,25 +1,27 @@
 // Adaptateurs API (back) -> forme utilisée par le front.
 // Tout le renommage / la mise en forme vit ici = point de couture de l'intégration.
-// shortcut: à brancher quand axios sera là -> mapPost(res.data), etc. (back en parallèle)
+// utilisé après les appels api.js (fetch) -> mapPost(res.data), etc.
 
 import { formatCount, timeAgo } from '@/utils/format';
 
 // post API -> post front
+// suppose authorId / topicId populate côté back (cf. demande à l'équipe back)
 export function mapPost(p, userId) {
   return {
     id: p._id,
     text: p.content,
-    author: p.authorId?.username ?? 'unknown', // authorId populate
-    topic: p.topicId?.title ?? p.topicId, // topicId populate (sinon id brut)
-    verified: p.authorId?.verified ?? false,
+    author: p.authorId?.username ?? 'unknown',
+    topic: p.topicId?.title ?? null,
+    verified: p.authorId?.isVerified ?? false,
     time: timeAgo(p.createdAt),
     likes: p.likes?.length ?? 0,
     liked: hasLiked(p.likes, userId),
     comments: p.comments?.length ?? 0,
-    reposts: p.reposts ?? 0, // pas de compteur direct côté back -> 0
-    pinned: p.pinned ?? false, // absent du modèle -> false
-    tab: p.official ? 'official' : 'community', // shortcut: champ à confirmer avec le back
-    avatar: p.authorId?.avatar ?? null, // null -> avatar à initiales côté front
+    reposts: p.shareCount ?? 0,
+    pinned: false, // pas dans le modèle Post -> false
+    // post d'une source officielle -> onglet Official, sinon Community
+    tab: p.authorId?.isOfficialSource ? 'official' : 'community',
+    avatar: p.authorId?.avatarUrl || null, // vide/absent -> avatar à initiales
   };
 }
 
@@ -36,6 +38,7 @@ export function mapReply(r, userId) {
   return {
     id: r._id,
     author: r.authorId?.username ?? 'unknown',
+    avatar: r.authorId?.avatarUrl || null,
     time: timeAgo(r.createdAt),
     text: r.content,
     likes: r.likes?.length ?? 0,
@@ -43,25 +46,38 @@ export function mapReply(r, userId) {
   };
 }
 
-// user API -> profile front
+// user API -> profile front (User back n'a que username, pas de name séparé)
 export function mapProfile(u) {
   return {
-    name: u.name ?? u.username, // pas de name séparé -> username
+    name: u.username,
     handle: '@' + u.username,
     bio: u.bio ?? '',
-    avatar: u.avatar ?? null,
+    avatar: u.avatarUrl || null,
+    verified: u.isVerified ?? false,
+    stats: {
+      topics: u.followedTopics?.length ?? 0,
+      following: u.following?.length ?? 0,
+      followers: u.followersCount ?? 0, // ajouté par GET /users/:id
+      karma: formatCount(u.karma ?? 0),
+    },
   };
 }
 
 // topic API -> topic front
-export function mapTopic(t) {
+export function mapTopic(t, userId, myFollowedTopics) {
   return {
     id: t._id,
     title: t.title,
     degree: t.degree,
+    onFire: t.isOnFire ?? false,
+    official: t.isOfficial ?? false,
+    variation: t.variationPct ?? 0,
     participants: formatCount(t.participantsCount ?? 0) + ' participants',
-    avatar: t.avatar ?? null, // absent du modèle -> avatar à initiales
-    following: t.following ?? false,
+    avatar: null, // pas dans le modèle Topic -> avatar à initiales
+    // suivi = topicId dans les followedTopics du user courant (sinon false)
+    following: Array.isArray(myFollowedTopics)
+      ? myFollowedTopics.some((id) => String(id) === String(t._id))
+      : false,
   };
 }
 
