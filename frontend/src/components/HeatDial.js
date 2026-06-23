@@ -1,4 +1,3 @@
-// Cadran de chaleur (motif signature DS) — anneau SVG turquoise = heat/100.
 export default function HeatDial({ heat = 0, size = 84, onFire = false }) {
   const sw = size <= 64 ? 5 : 6;
   const r = (size - sw) / 2;

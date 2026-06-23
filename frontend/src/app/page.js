@@ -50,7 +50,6 @@ export default async function Home() {
           <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">— Featured</h2>
           <div className="mt-2 flex items-start justify-between gap-3">
             <h1 className="font-title text-3xl font-bold leading-tight text-ink lg:text-4xl">{featured.title}</h1>
-            {/* cadran de chaleur (motif signature) */}
             <HeatDial heat={featured.degree} onFire={featured.onFire} size={84} />
           </div>
 

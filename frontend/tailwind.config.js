@@ -4,7 +4,6 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // marque Trend (teal) — une seule couleur de marque
         glow: '#37E3D2',
         brand: '#06C2B2',
         press: '#04A192',
@@ -12,12 +11,10 @@ module.exports = {
         tint: '#DCF6F2',
         tint2: '#EAFAF7',
         onbrand: '#03302C',
-        // surfaces light
         surface: '#FFFFFF',
         background: '#EFF5F3',
         line: '#E5EDEA',
         line2: '#EEF3F1',
-        // textes
         ink: '#0C1B19',
         muted: '#54655F',
         faint: '#90A09B',
@@ -27,7 +24,6 @@ module.exports = {
         body: ['var(--font-body)', 'sans-serif'],
       },
       backgroundImage: {
-        // dégradé signature 168° (glow -> brand 75% -> press) — contraste texte
         'brand-grad': 'linear-gradient(168deg, #37E3D2 0%, #06C2B2 75%, #04A192 100%)',
         avatar: 'linear-gradient(160deg, #143430, #0C1B19)',
         canvas:
