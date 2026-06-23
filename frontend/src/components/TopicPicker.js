@@ -58,14 +58,14 @@ export default function TopicPicker({ topics, value, onChange }) {
 
       {open && (
         <div className="glass glass-lg absolute z-20 mt-2 w-80 rounded-2xl p-2">
-          <div className="flex items-center gap-2 rounded-xl border border-white/60 bg-white/50 px-3 py-2">
+          <div className="flex items-center gap-2 rounded-xl border border-white/50 bg-white/40 px-3 py-2 transition focus-within:border-white/80 focus-within:bg-white/65">
             <Search size={15} className="text-faint" />
             <input
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search a topic…"
-              className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-faint"
+              className="w-full bg-transparent text-sm text-ink outline-none focus-visible:!outline-none placeholder:text-faint"
             />
           </div>
 
