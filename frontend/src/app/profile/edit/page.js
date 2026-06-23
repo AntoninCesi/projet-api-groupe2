@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AtSign } from 'lucide-react';
@@ -8,12 +8,14 @@ import api from '@/utils/api';
 import { logout } from '@/utils/auth';
 
 const BIO_MAX = 160;
+const AVATAR_MAX = 256; // côté max (px) après redimensionnement
 
 export default function EditProfilePage() {
   const router = useRouter();
+  const fileRef = useRef(null);
   const [handle, setHandle] = useState('');
   const [bio, setBio] = useState('');
-  const [avatar, setAvatar] = useState(null);
+  const [avatar, setAvatar] = useState(null); // url ou data URL
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -32,11 +34,29 @@ export default function EditProfilePage() {
   // initiales depuis le username (pas de name séparé dans l'app)
   const initials = handle.slice(0, 2).toUpperCase();
 
+  // fichier image -> redimensionné en data URL (avatar léger, stocké dans avatarUrl)
+  async function onPickFile(e) {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // permet de re-sélectionner le même fichier
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setError('Please choose an image file');
+      return;
+    }
+    try {
+      setError('');
+      const dataUrl = await resizeImage(file, AVATAR_MAX);
+      setAvatar(dataUrl);
+    } catch {
+      setError('Could not read this image');
+    }
+  }
+
   async function handleSave() {
     setSaving(true);
     setError('');
     try {
-      await api.patch('/users/me', { username: handle.trim(), bio });
+      await api.patch('/users/me', { username: handle.trim(), bio, avatarUrl: avatar });
       router.push('/profile');
     } catch (err) {
       // 409 = username déjà pris (sinon message générique)
@@ -68,8 +88,12 @@ export default function EditProfilePage() {
 
       {/* change picture */}
       <div className="mt-2 flex flex-col items-center">
-        <div className="relative">
-          {/* picture, else initials */}
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          className="relative"
+          aria-label="Change photo"
+        >
           {avatar ? (
             <img src={avatar} alt={handle} className="h-20 w-20 rounded-2xl object-cover" />
           ) : (
@@ -77,9 +101,17 @@ export default function EditProfilePage() {
               {initials}
             </div>
           )}
-        </div>
-        {/* pas d'endpoint d'upload côté back -> bouton inactif pour l'instant */}
-        <button className="mt-2 text-sm font-medium text-brand">Change photo</button>
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          onChange={onPickFile}
+          className="hidden"
+        />
+        <button onClick={() => fileRef.current?.click()} className="mt-2 text-sm font-medium text-brand">
+          Change photo
+        </button>
       </div>
 
       {/* erreur (ex: 409 username pris) */}
@@ -116,6 +148,30 @@ export default function EditProfilePage() {
       </button>
     </main>
   );
+}
+
+// redimensionne une image (carré max `max`px) et renvoie une data URL JPEG compacte
+function resizeImage(file, max) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const scale = Math.min(1, max / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function Field({ label, children }) {

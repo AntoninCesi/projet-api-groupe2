@@ -43,6 +43,9 @@ export function mapReply(r, userId) {
     text: r.content,
     likes: r.likes?.length ?? 0,
     liked: hasLiked(r.likes, userId),
+    // id de la réponse à laquelle celle-ci répond (null = répond au commentaire).
+    // rétro-compatible : null tant que le back n'ajoute pas le champ replyTo.
+    replyTo: r.replyTo ?? null,
   };
 }
 
@@ -73,6 +76,9 @@ const NOTIF_META = {
   REPOST:        { type: 'repost',  actor: 'Someone', text: 'reposted your post' },
   NEW_POST:      { type: 'post',    actor: 'Someone', text: 'published a new post' },
   TOPIC_ON_FIRE: { type: 'fire',    actor: 'A topic', text: 'is on fire right now' },
+  // libellés prêts si le back ajoute ces types (sinon les comments/replies arrivent en MENTION)
+  COMMENT:       { type: 'reply',   actor: 'Someone', text: 'commented on your post' },
+  REPLY:         { type: 'reply',   actor: 'Someone', text: 'replied to you' },
 };
 
 export function mapNotification(n) {

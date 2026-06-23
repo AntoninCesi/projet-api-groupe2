@@ -35,10 +35,12 @@ export default function PostPage() {
     } catch {}
   }
 
-  // réponse à un commentaire (1 niveau) -> POST puis refetch
-  async function addReply(commentId, text) {
+  // réponse à un commentaire ou à une autre réponse -> POST puis refetch.
+  // replyTo = id de la réponse visée (null = répond au commentaire).
+  // rétro-compatible : le back ignore replyTo tant qu'il ne le gère pas.
+  async function addReply(commentId, text, replyTo = null) {
     try {
-      await api.post(`/posts/${id}/comments/${commentId}/replies`, { content: text });
+      await api.post(`/posts/${id}/comments/${commentId}/replies`, { content: text, replyTo });
       load();
     } catch {}
   }
@@ -125,26 +127,47 @@ function CommentItem({ comment, onReply }) {
     setOpenId(openId === id ? null : id);
   }
 
-  // une reply va toujours sur le commentaire parent (1 seul niveau, voir CLAUDE.md)
-  function submit(text) {
-    onReply(comment.id, text);
+  // soumet une réponse en gardant la cible (replyTo) -> back via le commentaire parent
+  function submit(replyTo, text) {
+    onReply(comment.id, text, replyTo);
     setOpenId(null);
+  }
+
+  // les réponses sont à plat dans comment.replies, chacune avec un replyTo éventuel.
+  // on reconstruit l'arbre : 'root' = réponses directes au commentaire.
+  const byParent = {};
+  for (const r of comment.replies) {
+    const key = r.replyTo || 'root';
+    (byParent[key] ||= []).push(r);
+  }
+  // id de réponse -> auteur, pour afficher "↳ @auteur"
+  const authorById = Object.fromEntries(comment.replies.map((r) => [r.id, r.author]));
+
+  // rendu récursif : décalage progressif plafonné (lisible même très imbriqué)
+  function renderReplies(parentId, depth) {
+    const list = byParent[parentId];
+    if (!list) return null;
+    return list.map((r) => (
+      <div key={r.id} className="mt-3" style={{ marginLeft: Math.min(depth, 2) * 14 }}>
+        {r.replyTo && (
+          <p className="mb-0.5 text-xs text-faint">↳ @{authorById[r.replyTo] ?? '…'}</p>
+        )}
+        <CommentRow comment={r} onReplyClick={() => toggle(r.id)} />
+        {openId === r.id && <ReplyInput onSubmit={(t) => submit(r.id, t)} />}
+        {renderReplies(r.id, depth + 1)}
+      </div>
+    ));
   }
 
   return (
     <div>
       <CommentRow comment={comment} onReplyClick={() => toggle(comment.id)} />
-      {openId === comment.id && <ReplyInput onSubmit={submit} />}
+      {openId === comment.id && <ReplyInput onSubmit={(t) => submit(null, t)} />}
 
-      {/* replies indentées (1 niveau) */}
+      {/* réponses indentées sous le commentaire (puis décalage par profondeur) */}
       {comment.replies.length > 0 && (
-        <div className="ml-5 mt-3 space-y-3 border-l border-line pl-4">
-          {comment.replies.map((r) => (
-            <div key={r.id}>
-              <CommentRow comment={r} onReplyClick={() => toggle(r.id)} />
-              {openId === r.id && <ReplyInput onSubmit={submit} />}
-            </div>
-          ))}
+        <div className="ml-5 mt-3 border-l border-line pl-4">
+          {renderReplies('root', 0)}
         </div>
       )}
     </div>
