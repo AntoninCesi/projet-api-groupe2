@@ -60,30 +60,36 @@ export default function PostPage() {
 
       {post && <PostCard post={post} />}
 
-      {/* en-tête de la liste de réponses */}
-      <div className="mt-5 flex items-center justify-between">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">— {total} replies</h2>
-        {/* shortcut: tri non branché */}
-        <button className="flex items-center gap-1 text-xs font-medium text-faint">
-          Top <ChevronDown size={14} />
-        </button>
-      </div>
+      <section className="mt-4 rounded-2xl border border-line/70">
+        <div className="flex items-center justify-between border-b border-line/70 px-5 py-4">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">{total} replies</h2>
+          <button className="flex items-center gap-1 text-xs font-medium text-faint">
+            Top <ChevronDown size={14} />
+          </button>
+        </div>
 
-      <div className="mt-3 space-y-4">
-        {comments.map((c) => (
-          <CommentItem key={c.id} comment={c} onReply={addReply} />
-        ))}
-      </div>
+        <div className="border-b border-line/70 px-5 py-4">
+          <Composer onSubmit={addComment} />
+        </div>
 
-      <Composer onSubmit={addComment} />
+        <div className="divide-y divide-line/70 px-5">
+          {comments.length === 0 && (
+            <p className="py-10 text-center text-sm text-faint">No replies yet. Start the discussion.</p>
+          )}
+          {comments.map((c) => (
+            <div key={c.id} className="py-4">
+              <CommentItem comment={c} onReply={addReply} />
+            </div>
+          ))}
+        </div>
+      </section>
     </Shell>
   );
 }
 
-// post original : pas de carte, posé sur le fond de l'appli + trait de séparation
 function PostCard({ post }) {
   return (
-    <article className="mt-4 border-b border-line pb-5">
+    <article className="mt-4 rounded-2xl border border-line/70 p-5">
       {post.pinned && (
         <p className="mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-brand">
           <Pin size={13} /> {post.official ? 'Official' : 'Community'} · Pinned
@@ -152,8 +158,8 @@ function CommentItem({ comment, onReply }) {
 // ligne d'un commentaire ou d'une reply (même rendu, onReplyClick optionnel)
 function CommentRow({ comment, onReplyClick }) {
   return (
-    <div className="flex gap-2">
-      <Avatar name={comment.author} size={32} />
+    <div className="flex gap-2.5 rounded-xl p-2 transition hover:bg-brand/[0.04]">
+      <Avatar name={comment.author} size={34} />
       <div className="flex-1">
         <div className="flex items-center gap-1">
           <span className="text-sm font-semibold text-ink">{comment.author}</span>
@@ -208,15 +214,15 @@ function Composer({ onSubmit }) {
   }
 
   return (
-    <div className="mt-5 flex items-center gap-2 rounded-2xl border border-line bg-white p-2">
+    <div className="flex items-center gap-2 rounded-xl border border-line bg-transparent p-1.5 transition focus-within:border-brand/40">
       <input
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && send()}
         placeholder="Add a comment…"
-        className="flex-1 bg-transparent px-2 text-sm text-ink outline-none"
+        className="flex-1 bg-transparent px-3 text-sm text-ink outline-none"
       />
-      <button onClick={send} className="rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white">
+      <button onClick={send} className="rounded-lg bg-brand-grad px-5 py-2 text-sm font-bold text-onbrand shadow-glowsm transition hover:-translate-y-px">
         Send
       </button>
     </div>

@@ -58,9 +58,9 @@ export default function TopicPage() {
       </div>
 
       {/* posts du tab courant -> clic ouvre la page post + commentaires */}
-      <div className="mt-2 divide-y divide-line">
+      <div className="mt-3 space-y-3">
         {visible.map((p) => (
-          <Link key={p.id} href={`/post/${p.id}`} className="block py-4">
+          <Link key={p.id} href={`/post/${p.id}`} className="block rounded-2xl border border-line/70 p-4 transition hover:border-brand/40">
             <Post post={p} />
           </Link>
         ))}
