@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Search, ChevronRight, Landmark, Trophy, Cpu, TrendingUp, Image, FlaskConical } from 'lucide-react';
 import Shell from '@/components/Shell';
 import api from '@/utils/api';
-import { mapTopic } from '@/utils/adapters';
-import { explore } from '@/data/explore';
+import { mapTopic, mapTheme } from '@/utils/adapters';
+
+const LIMIT = 20;
 
 const categoryIcons = {
   politics: Landmark,
@@ -17,31 +18,63 @@ const categoryIcons = {
   science: FlaskConical,
 };
 
+const toTopic = (t) => ({
+  ...mapTopic(t),
+  meta: `${t.postsCount ?? 0} posts · ${t.participantsCount ?? 0} participants`,
+});
+
 export default function ExplorePage() {
   const [query, setQuery] = useState('');
   const [topics, setTopics] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    api.get('/topics', { params: { limit: 12 } })
-      .then((res) =>
-        setTopics(
-          res.data.map((t) => ({
-            ...mapTopic(t),
-            meta: `${t.postsCount ?? 0} posts · ${t.participantsCount ?? 0} participants`,
-          }))
-        )
-      )
-      .catch(() => setTopics([]))
-      .finally(() => setLoading(false));
+    api.get('/themes')
+      .then((res) => setCategories(res.data.map((t) => mapTheme(t))))
+      .catch(() => setCategories([]));
   }, []);
 
+  useEffect(() => {
+    const q = query.trim();
+    setLoading(true);
+    const id = setTimeout(() => {
+      api.get('/topics', { params: { page: 1, limit: LIMIT, ...(q && { search: q }) } })
+        .then((res) => {
+          setTopics(res.data.map(toTopic));
+          setPage(1);
+          setHasMore(res.data.length === LIMIT);
+        })
+        .catch(() => {
+          setTopics([]);
+          setHasMore(false);
+        })
+        .finally(() => setLoading(false));
+    }, 300);
+    return () => clearTimeout(id);
+  }, [query]);
+
+  const loadMore = useCallback(async () => {
+    const q = query.trim();
+    const next = page + 1;
+    setLoadingMore(true);
+    try {
+      const res = await api.get('/topics', { params: { page: next, limit: LIMIT, ...(q && { search: q }) } });
+      setTopics((prev) => [...prev, ...res.data.map(toTopic)]);
+      setPage(next);
+      setHasMore(res.data.length === LIMIT);
+    } catch {
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [query, page]);
+
   const q = query.trim().toLowerCase();
-  const matchTopics = q ? topics.filter((t) => t.title.toLowerCase().includes(q)) : topics;
-  const matchCategories = q
-    ? explore.categories.filter((c) => c.name.toLowerCase().includes(q))
-    : explore.categories;
-  const noResult = q && matchTopics.length === 0 && matchCategories.length === 0;
+  const matchCategories = q ? categories.filter((c) => c.name.toLowerCase().includes(q)) : categories;
+  const noResult = q && topics.length === 0 && matchCategories.length === 0;
 
   return (
     <Shell>
@@ -67,14 +100,24 @@ export default function ExplorePage() {
         <p className="mt-8 text-center text-sm text-faint">No results for “{query}”.</p>
       ) : (
         <>
-          {matchTopics.length > 0 && (
+          {topics.length > 0 && (
             <>
               <h2 className="mt-7 text-xs font-semibold uppercase tracking-wide text-brand">{q ? 'Topics' : 'Hot trends'}</h2>
               <div className="mt-3 space-y-3">
-                {matchTopics.map((t) => (
+                {topics.map((t) => (
                   <HotTopic key={t.id} topic={t} />
                 ))}
               </div>
+
+              {hasMore && (
+                <button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="mt-4 w-full rounded-2xl border border-line/70 py-3 text-sm font-medium text-brand transition hover:border-brand/40 disabled:opacity-50"
+                >
+                  {loadingMore ? 'Loading…' : 'Load more'}
+                </button>
+              )}
             </>
           )}
 
@@ -112,13 +155,13 @@ function HotTopic({ topic }) {
 function CategoryCard({ category }) {
   const Icon = categoryIcons[category.icon] ?? Landmark;
   return (
-    <Link href={category.link} className="flex items-center gap-3 rounded-2xl border border-line/70 p-4 text-left transition hover:border-brand/40">
+    <Link href={`/theme/${encodeURIComponent(category.id)}`} className="flex items-center gap-3 rounded-2xl border border-line/70 p-4 text-left transition hover:border-brand/40">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
         <Icon size={18} />
       </div>
       <div className="min-w-0">
         <p className="font-title font-semibold text-ink">{category.name}</p>
-        <p className="text-xs text-faint">{category.topics} topics</p>
+        <p className="text-xs text-faint">{category.topicsCount} topics</p>
       </div>
     </Link>
   );

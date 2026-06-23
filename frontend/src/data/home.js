@@ -1,5 +1,5 @@
-// shortcut: "Your themes" encore mocké — pas d'endpoint themes côté back pour l'instant.
-// Featured / Trending / currentUser sont désormais branchés sur l'API (GET /topics, /api/auth/me).
+// shortcut: "Your themes" still mocked — no themes endpoint on the back end for now.
+// Featured / Trending / currentUser are now wired to the API (GET /topics, /api/auth/me).
 export const themes = [
   { id: 1, name: 'Space', actives: '1.2k active', degree: 88, topic: 'Artemis III Mission', icon: 'compass' },
   { id: 2, name: 'Elections', actives: '3.4k active', degree: 94, topic: 'Runoff debate', icon: 'vote' },

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Compass, Plus, Bell, User } from 'lucide-react';
 
-// onglet de nav : teal + point si actif, sinon gris
+// nav tab: teal + dot if active, otherwise gray
 function NavLink({ href, icon: Icon, label, active }) {
   return (
     <Link href={href} aria-label={label} className={`relative ${active ? 'text-brand' : 'text-faint'}`}>
@@ -14,7 +14,7 @@ function NavLink({ href, icon: Icon, label, active }) {
   );
 }
 
-// nav flottante 5 entrées (Accueil, Explorer, Créer, Activité, Profil)
+// floating nav with 5 entries (Accueil, Explorer, Créer, Activité, Profil)
 export default function BottomNav() {
   const path = usePathname();
 

@@ -1,6 +1,6 @@
 export const activity = [
   {
-    //fake json waiting for back-end api data 
+    //fake json waiting for back-end api data
     label: 'Today',
     items: [
       { id: 1, type: 'reply', actor: 'geopol_nerd', text: 'replied to your comment in War in Ukraine', time: '2 min', link: '/topic/war-in-ukraine' },

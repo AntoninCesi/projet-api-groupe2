@@ -1,12 +1,12 @@
-// helpers d'affichage partagés (front)
+// shared display helpers (front)
 
-// 2100 -> "2.1k" (app en anglais, point décimal)
+// 2100 -> "2.1k" (English app, decimal point)
 export function formatCount(n) {
   if (n < 1000) return n;
   return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
 }
 
-// date API -> temps relatif court : "now", "3 min", "2 h", "5 d"
+// API date -> short relative time: "now", "3 min", "2 h", "5 d"
 export function timeAgo(date) {
   if (!date) return '';
   const s = Math.floor((Date.now() - new Date(date).getTime()) / 1000);

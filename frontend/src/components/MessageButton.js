@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { Mail } from 'lucide-react';
 
-// bouton "envoyer un message" à poser sur n'importe quel user (auteur de post, profil…)
+// "send a message" button to place on any user (post author, profile...)
 export default function MessageButton({ userId, className = '' }) {
-  if (!userId) return null; // pas d'id -> rien (ex. data mockée sans authorId)
+  if (!userId) return null; // no id -> nothing (e.g. mocked data without authorId)
   return (
     <Link
       href={`/messages/${userId}`}

@@ -4,15 +4,23 @@ import { User, BadgeCheck, ArrowUpRight, ArrowDownRight, ArrowRight } from 'luci
 import Shell from '@/components/Shell';
 import HeatDial from '@/components/HeatDial';
 import ThemeCard from '@/components/ThemeCard';
+import SparkLine from '@/components/SparkLine';
 import api from '@/utils/api';
-import { mapTopic } from '@/utils/adapters';
-import { themes } from '@/data/home'; // shortcut: themes encore mockés (pas d'endpoint back)
+import { mapTopic, mapTheme } from '@/utils/adapters';
 
-// topics triés par degree (les plus chauds en premier) depuis l'API
 async function getTopics() {
   try {
     const res = await api.get('/topics', { params: { limit: 10 } });
-    return res.data.map(mapTopic);
+    return res.data.map((t) => mapTopic(t));
+  } catch {
+    return [];
+  }
+}
+
+async function getThemes() {
+  try {
+    const res = await api.get('/themes');
+    return res.data.map((t) => mapTheme(t)).slice(0, 4);
   } catch {
     return [];
   }
@@ -20,13 +28,12 @@ async function getTopics() {
 
 export default async function Home() {
   const loggedIn = cookies().get('trend_token');
-  const topics = await getTopics();
+  const [topics, themes] = await Promise.all([getTopics(), getThemes()]);
   const featured = topics[0] ?? null;
   const trending = topics.slice(1, 6);
 
   return (
     <Shell>
-      {/* top bar : mobile only — sur desktop la sidebar la remplace */}
       <header className="flex items-center justify-between py-5 lg:hidden">
         <Link href="/" className="flex items-baseline gap-1.5">
           <span className="font-title text-xl font-bold text-ink">Trend</span>
@@ -44,16 +51,14 @@ export default async function Home() {
         )}
       </header>
 
-      {/* à la une : sujet le plus chaud */}
       {featured && (
         <section className="lg:pt-1">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">— Featured</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">Featured</h2>
           <div className="mt-2 flex items-start justify-between gap-3">
             <h1 className="font-title text-3xl font-bold leading-tight text-ink lg:text-4xl">{featured.title}</h1>
             <HeatDial heat={featured.degree} onFire={featured.onFire} size={84} />
           </div>
 
-          {/* chips */}
           <div className="mt-3 flex gap-2">
             {featured.official && (
               <span className="flex items-center gap-1 rounded-full bg-brand/10 px-3 py-1 text-xs font-medium text-press">
@@ -68,7 +73,12 @@ export default async function Home() {
 
           <p className="mt-3 text-sm text-muted">{featured.participants}</p>
 
-          {/* lien vers le topic */}
+          {featured.spark.length > 1 && (
+            <div className="mt-3">
+              <SparkLine data={featured.spark} width={320} height={56} />
+            </div>
+          )}
+
           <Link
             href={`/topic/${featured.id}`}
             className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-brand-grad py-4 font-semibold text-white shadow-md shadow-brand/30 lg:w-fit lg:px-8"
@@ -78,10 +88,9 @@ export default async function Home() {
         </section>
       )}
 
-      {/* ça grimpe maintenant */}
       <section className="mt-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">— Trending now</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">Trending now</h2>
           <Link href="/explore" className="text-sm font-medium text-brand">See all</Link>
         </div>
 
@@ -93,6 +102,9 @@ export default async function Home() {
                 <p className="truncate font-semibold text-ink">{t.title}</p>
                 <p className="text-xs text-faint">{t.participants}</p>
               </div>
+              {t.spark.length > 1 && (
+                <SparkLine data={t.spark} width={56} height={24} color={t.variation >= 0 ? '#06C2B2' : '#90A09B'} />
+              )}
               <span className="w-10 text-right font-title text-sm font-bold text-ink">{t.degree}°</span>
               <span className={`flex w-12 items-center justify-end gap-0.5 text-xs font-medium ${t.variation >= 0 ? 'text-brand' : 'text-faint'}`}>
                 {t.variation >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
@@ -103,18 +115,19 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* thèmes de l'utilisateur — shortcut: encore mockés (pas d'endpoint back) */}
-      <section className="mt-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">— Your themes</h2>
-          <Link href="/profile" className="text-sm font-medium text-brand">Manage</Link>
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          {themes.map((t) => (
-            <ThemeCard key={t.id} theme={t} />
-          ))}
-        </div>
-      </section>
+      {themes.length > 0 && (
+        <section className="mt-8">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">Hot themes</h2>
+            <Link href="/explore" className="text-sm font-medium text-brand">Explore</Link>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            {themes.map((t) => (
+              <ThemeCard key={t.id} theme={t} />
+            ))}
+          </div>
+        </section>
+      )}
     </Shell>
   );
 }

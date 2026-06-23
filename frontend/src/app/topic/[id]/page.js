@@ -16,7 +16,8 @@ export default function TopicPage() {
   const search = useSearchParams();
   const [topic, setTopic] = useState(null);
   const [posts, setPosts] = useState([]);
-  // si on vient de publier (?tab=community), on ouvre direct sur Community
+  const [following, setFollowing] = useState(false);
+  // if we just posted (?tab=community), open straight to Community
   const [tab, setTab] = useState(search.get('tab') === 'community' ? 'community' : 'official');
 
   useEffect(() => {
@@ -25,7 +26,22 @@ export default function TopicPage() {
     api.get('/posts', { params: { topicId: id } })
       .then((res) => setPosts(res.data.map((p) => mapPost(p, userId))))
       .catch(() => {});
+    // "following" state from the current profile (ignored if not signed in)
+    api.get('/api/auth/me')
+      .then((res) => setFollowing((res.data.followedTopics ?? []).some((t) => String(t) === String(id))))
+      .catch(() => {});
   }, [id]);
+
+  async function toggleFollow() {
+    const prev = following;
+    setFollowing(!prev); // optimistic
+    try {
+      const { data } = await api.post(`/topics/${id}/follow`);
+      setFollowing(data.following);
+    } catch {
+      setFollowing(prev); // failure (e.g. not signed in) -> roll back
+    }
+  }
 
   const visible = posts.filter((p) => p.tab === tab);
 
@@ -43,21 +59,23 @@ export default function TopicPage() {
         )}
         <div className="min-w-0 flex-1">
           <h1 className="truncate font-title text-base font-bold leading-tight text-ink">{topic?.title || 'Loading…'}</h1>
-          <p className="text-xs text-faint">{topic?.degree ?? 0}° · {topic?.participants ?? '—'}</p>
+          <p className="text-xs text-faint">{topic?.degree ?? 0}° · {topic?.participants ?? '0 participants'}</p>
         </div>
-        {/* shortcut: bouton follow non branché (Phase 4) */}
-        <button className={`rounded-full px-4 py-1.5 text-sm font-medium ${topic?.following ? 'bg-brand/10 text-brand' : 'bg-brand text-white'}`}>
-          {topic?.following ? 'Following' : 'Follow'}
+        <button
+          onClick={toggleFollow}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium ${following ? 'bg-brand/10 text-brand' : 'bg-brand text-white'}`}
+        >
+          {following ? 'Following' : 'Follow'}
         </button>
       </div>
 
-      {/* onglets Officiel / Communauté */}
+      {/* Official / Community tabs */}
       <div className="mt-4 flex gap-1 rounded-2xl bg-line/60 p-1">
         <TabButton label="Official" active={tab === 'official'} onClick={() => setTab('official')} />
         <TabButton label="Community" active={tab === 'community'} onClick={() => setTab('community')} />
       </div>
 
-      {/* posts du tab courant -> clic ouvre la page post + commentaires */}
+      {/* posts of the current tab -> click opens the post + comments page */}
       <div className="mt-3 space-y-3">
         {visible.map((p) => (
           <Link key={p.id} href={`/post/${p.id}`} className="block rounded-2xl border border-line/70 p-4 transition hover:border-brand/40">
@@ -65,7 +83,6 @@ export default function TopicPage() {
           </Link>
         ))}
       </div>
-
     </Shell>
   );
 }
@@ -81,7 +98,7 @@ function TabButton({ label, active, onClick }) {
   );
 }
 
-// post posé sur le fond de l'appli, séparé par un trait (divide-y du parent)
+// post sitting on the app background, separated by a line (parent's divide-y)
 function Post({ post }) {
   return (
     <article>
@@ -92,7 +109,7 @@ function Post({ post }) {
       )}
 
       <div className="flex items-start gap-2">
-        {/* posts mockés -> logo (img) ; posts user -> avatar à initiales */}
+        {/* mocked posts -> logo (img); user posts -> initials avatar */}
         {post.avatar ? (
           <img src={post.avatar} alt={post.author} className="h-9 w-9 rounded-full object-cover" />
         ) : (
@@ -110,9 +127,9 @@ function Post({ post }) {
         </button>
       </div>
 
-      <p className="mt-2 text-sm leading-relaxed text-ink">{post.text}</p>
+      <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink">{post.text}</p>
 
-      {/* actions : like cliquable, reste en gris (// shortcut: pas branché) */}
+      {/* actions: like is clickable, rest stays gray (// shortcut: not wired up) */}
       <div className="mt-3 flex items-center gap-6 text-faint">
         <LikeButton count={post.likes} liked={post.liked} size={16} postId={post.id} />
         <span className="flex items-center gap-1.5 text-sm">

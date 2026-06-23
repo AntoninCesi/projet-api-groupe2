@@ -1,13 +1,14 @@
 import Link from 'next/link';
-import { Compass, Vote, Droplet, Trophy } from 'lucide-react';
+import { Landmark, Trophy, Cpu, TrendingUp, Image, FlaskConical } from 'lucide-react';
 
-const icons = { compass: Compass, vote: Vote, droplet: Droplet, trophy: Trophy };
+// same keys as the explore page (cf. utils/adapters themeIcon)
+const icons = { politics: Landmark, sport: Trophy, tech: Cpu, economy: TrendingUp, culture: Image, science: FlaskConical };
 
 export default function ThemeCard({ theme }) {
-  const Icon = icons[theme.icon] ?? Compass;
+  const Icon = icons[theme.icon] ?? Landmark;
 
   return (
-    <Link href={`/theme/${theme.id}`} className="block rounded-2xl border border-line bg-gradient-to-br from-white to-background p-4">
+    <Link href={`/theme/${encodeURIComponent(theme.id)}`} className="block rounded-2xl border border-line bg-gradient-to-br from-white to-background p-4">
       <div className="flex items-center gap-2">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
           <Icon size={18} />
@@ -18,7 +19,7 @@ export default function ThemeCard({ theme }) {
         </div>
       </div>
 
-      {/* degré de chaleur + topic le plus chaud */}
+      {/* heat degree + hottest topic */}
       <div className="mt-3 flex items-center gap-2 text-sm">
         <span className="font-title font-bold text-brand">{theme.degree}°</span>
         <span className="truncate text-muted">{theme.topic}</span>

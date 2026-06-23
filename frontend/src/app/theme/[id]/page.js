@@ -1,37 +1,114 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Leaf, Check, Flame, BadgeCheck, TrendingUp, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { ArrowLeft, Leaf, Check, Flame, TrendingUp, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import Shell from '@/components/Shell';
 import SparkLine from '@/components/SparkLine';
-import { theme } from '@/data/theme';
+import api from '@/utils/api';
+import { mapTopic } from '@/utils/adapters';
+import { formatCount } from '@/utils/format';
 
-const filters = ['On fire', 'Official', 'All'];
+const filters = ['All', 'On fire', 'Official'];
+
+// topic API -> row in the "Theme topics" list
+function toThemeTopic(t) {
+  const m = mapTopic(t);
+  return {
+    id: m.id,
+    name: m.title,
+    meta: `${t.category || 'Topic'} · ${t.postsCount ?? 0} posts`,
+    degree: m.degree,
+    change: `${m.variation >= 0 ? '+' : ''}${m.variation}%`,
+    up: m.variation >= 0,
+    official: m.official,
+    onFire: m.onFire,
+    spark: m.spark,
+    link: `/topic/${m.id}`,
+  };
+}
 
 export default function ThemePage() {
-  const { featured } = theme;
-  const [following, setFollowing] = useState(theme.following);
-  const [filter, setFilter] = useState('On fire');
+  const { id } = useParams(); // = category name (already decoded by Next)
+  const name = decodeURIComponent(id);
 
-  const shownTopics = theme.topics.filter((t) =>
+  const [theme, setTheme] = useState(null);
+  const [topics, setTopics] = useState([]);
+  const [following, setFollowing] = useState(false);
+  const [filter, setFilter] = useState('All');
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const { data } = await api.get(`/themes/${encodeURIComponent(name)}`);
+        if (!alive) return;
+        setTheme(data);
+        setTopics((data.topics ?? []).map(toThemeTopic));
+      } catch {
+        if (alive) setNotFound(true);
+      } finally {
+        if (alive) setLoading(false);
+      }
+      // "following" state from the current profile (ignored if not signed in)
+      try {
+        const me = await api.get('/api/auth/me');
+        if (alive) setFollowing((me.data.followedThemes ?? []).includes(name));
+      } catch { /* not signed in -> not following */ }
+    })();
+    return () => { alive = false; };
+  }, [name]);
+
+  async function toggleFollow() {
+    const prev = following;
+    setFollowing(!prev); // optimistic
+    try {
+      const { data } = await api.post(`/themes/${encodeURIComponent(name)}/follow`);
+      setFollowing(data.following);
+    } catch {
+      setFollowing(prev); // failure (e.g. not signed in) -> roll back
+    }
+  }
+
+  const shownTopics = topics.filter((t) =>
     filter === 'All' ? true : filter === 'Official' ? t.official : t.onFire
   );
+  const featured = topics[0] ?? null;
+
+  if (loading) {
+    return <Shell><p className="mt-16 text-center text-sm text-faint">Loading…</p></Shell>;
+  }
+  if (notFound || !theme) {
+    return (
+      <Shell>
+        <div className="flex items-center gap-3 py-5">
+          <Link href="/explore" aria-label="Back" className="text-ink"><ArrowLeft size={22} /></Link>
+          <h1 className="font-title text-xl font-bold text-ink">Theme</h1>
+        </div>
+        <p className="mt-16 text-center text-sm text-faint">This theme has no topics yet.</p>
+      </Shell>
+    );
+  }
+
+  const actives = `${formatCount(theme.participantsCount ?? 0)} active`;
 
   return (
     <Shell>
       {/* header */}
-      <div className="flex items-center gap-3 py-5 lg:pt-0">
-        <Link href="/" aria-label="Back" className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-ink">
+      <div className="flex items-center gap-3 py-5">
+        <Link href="/explore" aria-label="Back" className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-ink">
           <ArrowLeft size={18} />
         </Link>
         <div>
           <h1 className="font-title text-lg font-bold text-ink">Theme</h1>
-          <p className="text-xs text-faint">{theme.actives}</p>
+          <p className="text-xs text-faint">{actives}</p>
         </div>
       </div>
 
-      {/* Theme Cards */}
+      {/* theme card */}
       <section className="rounded-3xl border border-line bg-white p-5">
         <div className="flex items-center gap-3">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-grad text-white">
@@ -39,13 +116,13 @@ export default function ThemePage() {
           </div>
           <div>
             <h2 className="font-title text-2xl font-bold text-ink">{theme.name}</h2>
-            <p className="text-sm text-muted">{theme.actives} · {theme.topicsCount} topics</p>
+            <p className="text-sm text-muted">{actives} · {theme.topicsCount} topics</p>
           </div>
         </div>
 
-        {/* toggle follow button */}
+        {/* follow button (wired up) */}
         <button
-          onClick={() => setFollowing((v) => !v)}
+          onClick={toggleFollow}
           className={`mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3 font-semibold ${
             following ? 'border border-brand text-brand' : 'bg-brand text-white'
           }`}
@@ -53,17 +130,18 @@ export default function ThemePage() {
           {following ? <>Following <Check size={18} /></> : 'Follow'}
         </button>
 
-        {/* charts*/}
+        {/* heat + curve (sparkline of the hottest topic) */}
         <div className="mt-4 flex items-center gap-4 border-t border-line pt-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 border-brand">
             <span className="font-title text-lg font-bold text-ink">{theme.degree}°</span>
           </div>
-          <span className="flex items-center gap-1 text-sm font-semibold text-brand">
-            <TrendingUp size={16} /> {theme.change}
-          </span>
-          <span className="text-sm text-faint">/{theme.window}</span>
+          {featured && (
+            <span className={`flex items-center gap-1 text-sm font-semibold ${featured.up ? 'text-brand' : 'text-faint'}`}>
+              <TrendingUp size={16} /> {featured.change}
+            </span>
+          )}
           <div className="ml-auto">
-            <SparkLine data={theme.spark} width={120} height={40} />
+            {featured?.spark.length > 1 && <SparkLine data={featured.spark} width={120} height={40} />}
           </div>
         </div>
       </section>
@@ -84,31 +162,9 @@ export default function ThemePage() {
         ))}
       </div>
 
-      {/* featured */}
-      <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-brand">— Featured</h3>
-      <Link href={featured.link} className="mt-3 block rounded-3xl border border-line bg-white p-5">
-        <div className="flex items-start justify-between gap-3">
-          <h4 className="font-title text-2xl font-bold leading-tight text-ink">{featured.title}</h4>
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 border-brand">
-            <span className="font-title text-lg font-bold text-ink">{featured.degree}°</span>
-          </div>
-        </div>
-        <div className="mt-3 flex gap-2">
-          <span className="rounded-full bg-brand/10 px-3 py-1 text-xs font-medium text-press">{featured.tag}</span>
-          <span className="flex items-center gap-1 rounded-full border border-line px-3 py-1 text-xs font-medium text-muted">
-            <BadgeCheck size={14} className="text-brand" /> Official · {featured.official}
-          </span>
-        </div>
-        <p className="mt-3 flex items-center gap-1 text-sm text-muted">
-          {featured.posts} posts · {featured.participants} participants ·
-          <span className="flex items-center gap-1 font-semibold text-brand"><TrendingUp size={14} /> {featured.change}</span>
-          <span className="text-faint">/{featured.window}</span>
-        </p>
-      </Link>
-
-      {/* Theme topics */}
+      {/* theme topics */}
       <div className="mt-6 flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-brand">— Theme topics</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-brand">Theme topics</h3>
         <Link href="/explore" className="text-sm font-medium text-brand">See all</Link>
       </div>
       <div className="mt-2 divide-y divide-line">
@@ -120,16 +176,17 @@ export default function ThemePage() {
               <p className="truncate font-semibold text-ink">{t.name}</p>
               <p className="text-xs text-faint">{t.meta}</p>
             </div>
-            <SparkLine data={t.spark} width={56} height={24} color={t.up ? '#06C2B2' : '#90A09B'} />
+            {t.spark.length > 1 && (
+              <SparkLine data={t.spark} width={56} height={24} color={t.up ? '#06C2B2' : '#90A09B'} />
+            )}
             <span className="w-10 text-right font-title text-sm font-bold text-ink">{t.degree}°</span>
-            <span className={`flex w-10 items-center justify-end gap-0.5 text-xs font-medium ${t.up ? 'text-brand' : 'text-faint'}`}>
+            <span className={`flex w-12 items-center justify-end gap-0.5 text-xs font-medium ${t.up ? 'text-brand' : 'text-faint'}`}>
               {t.up ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
               {t.change.replace(/^[+-]/, '')}
             </span>
           </Link>
         ))}
       </div>
-
     </Shell>
   );
 }

@@ -1,5 +1,5 @@
-// fake data en attendant le back
-// shortcut: un seul topic mocké, on ignore l'id de l'URL pour l'instant
+// fake data while waiting for the back end
+// shortcut: a single mocked topic, we ignore the URL id for now
 export const topic = {
   id: 1,
   title: 'War in Ukraine',
@@ -9,7 +9,7 @@ export const topic = {
   following: true,
 };
 
-// tab: 'official' | 'community' -> sert au filtre des onglets
+// tab: 'official' | 'community' -> used to filter the tabs
 export const posts = [
   {
     id: 1,

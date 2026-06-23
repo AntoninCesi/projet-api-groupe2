@@ -107,7 +107,7 @@ function PostCard({ post }) {
       </div>
       <p className="mt-1 text-xs text-faint">{post.time} ago</p>
 
-      <p className="mt-3 text-[17px] leading-relaxed text-ink">{post.text}</p>
+      <p className="mt-3 whitespace-pre-wrap break-words text-[17px] leading-relaxed text-ink">{post.text}</p>
 
       {/* actions : like cliquable, reste en gris (// shortcut: pas branché) */}
       <div className="mt-4 flex items-center gap-6 text-faint">
@@ -167,7 +167,7 @@ function CommentRow({ comment, onReplyClick }) {
           <span className="text-sm font-semibold text-ink">{comment.author}</span>
           <span className="text-xs text-faint">· {comment.time}</span>
         </div>
-        <p className="mt-0.5 text-sm leading-relaxed text-ink">{comment.text}</p>
+        <p className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink">{comment.text}</p>
         <div className="mt-1 flex items-center gap-4 text-xs text-faint">
           <LikeButton count={comment.likes} size={14} />
           {onReplyClick && (

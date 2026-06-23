@@ -1,7 +1,7 @@
-// gestion du JWT côté front, stocké en cookie (lu par le client api.js + middleware)
+// front-side JWT handling, stored in a cookie (read by the api.js client + middleware)
 const TOKEN_COOKIE = 'trend_token';
 
-// stocke le JWT (max-age 24h = durée du token back)
+// stores the JWT (max-age 24h = back token lifetime)
 export function setToken(token) {
   document.cookie = `${TOKEN_COOKIE}=${token}; path=/; max-age=86400`;
 }
@@ -16,7 +16,7 @@ export function logout() {
   document.cookie = `${TOKEN_COOKIE}=; path=/; max-age=0`;
 }
 
-// id du user courant, décodé du payload JWT (sert à calculer "j'ai liké", etc.)
+// current user id, decoded from the JWT payload (used to compute "I liked it", etc.)
 export function getUserId() {
   const token = getToken();
   if (!token) return null;

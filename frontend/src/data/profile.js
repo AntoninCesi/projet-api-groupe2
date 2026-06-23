@@ -1,5 +1,5 @@
-// fake data en attendant le back (dev sur une autre branche)
-// shortcut: à remplacer par un appel API getProfile() quand le back est prêt
+// fake data while waiting for the back end (dev on another branch)
+// shortcut: to be replaced by a getProfile() API call once the back end is ready
 export const profile = {
   name: 'Camille Roy',
   handle: '@camille',

@@ -1,4 +1,4 @@
-// avatar à initiales (pas d'image externe -> jamais cassé)
+// initials avatar (no external image -> never broken)
 export default function Avatar({ name, size = 36 }) {
   return (
     <span
@@ -12,7 +12,7 @@ export default function Avatar({ name, size = 36 }) {
 
 function initials(name) {
   const parts = name.replace('@', '').split(/[_\s]+/).filter(Boolean);
-  // 1 lettre de chaque mot si le 2e commence par une lettre, sinon 2 lettres du 1er
+  // 1 letter from each word if the 2nd starts with a letter, otherwise 2 letters from the 1st
   if (parts.length >= 2 && /[a-z]/i.test(parts[1][0])) {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
