@@ -2,6 +2,7 @@ const Post = require('../models/post.model');
 const Activity = require('../models/activity.model');
 const Notification = require('../models/notification.model');
 const User = require('../models/user.model');
+const Topic = require('../models/topic.model');
 
 // Create a post
 const createPost = async (req, res) => {
@@ -21,6 +22,10 @@ const createPost = async (req, res) => {
             targetType: 'Post',
             targetId: post._id,
         });
+
+        if (post.topicId) {
+            await Topic.findByIdAndUpdate(post.topicId, { $inc: { postsCount: 1 } });
+        }
 
         res.status(201).json(post);
     } catch (err) {
