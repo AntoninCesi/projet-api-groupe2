@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { BadgeCheck, TrendingUp, ArrowUpRight, ArrowDownRight, ArrowRight } from 'lucide-react';
-import BottomNav from '@/components/BottomNav';
+import Shell from '@/components/Shell';
 import ThemeCard from '@/components/ThemeCard';
 import Sparkline from '@/components/SparkLine';
 import { currentUser, featured, trending, themes } from '@/data/home';
@@ -9,9 +9,9 @@ import { currentUser, featured, trending, themes } from '@/data/home';
 export default function Home() {
   const loggedIn = cookies().get('trend_auth');
   return (
-    <main className="mx-auto min-h-screen max-w-md bg-background px-5 pb-28">
-      {/* top bar : marque + user (ou login si déconnecté) */}
-      <header className="flex items-center justify-between py-5">
+    <Shell>
+      {/* top bar : mobile only — sur desktop la sidebar la remplace */}
+      <header className="flex items-center justify-between py-5 lg:hidden">
         <Link href="/" className="flex items-baseline gap-1.5">
           <span className="font-title text-xl font-bold text-ink">Trend</span>
           <span className="text-brand">*</span>
@@ -29,7 +29,7 @@ export default function Home() {
       </header>
 
       {/* à la une : sujet le plus chaud */}
-      <section>
+      <section className="lg:pt-1">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">— Featured</h2>
         <div className="mt-2 flex items-start justify-between gap-3">
           <h1 className="font-title text-4xl font-bold leading-tight text-ink">{featured.topic}</h1>
@@ -75,7 +75,7 @@ export default function Home() {
         {/* lien vers le topic */}
         <Link
           href={featured.link}
-          className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-brand-grad py-4 font-semibold text-white shadow-md shadow-brand/30"
+          className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-brand-grad py-4 font-semibold text-white shadow-md shadow-brand/30 lg:w-fit lg:px-8"
         >
           Enter the topic <ArrowRight size={18} />
         </Link>
@@ -119,8 +119,6 @@ export default function Home() {
           ))}
         </div>
       </section>
-
-      <BottomNav />
-    </main>
+    </Shell>
   );
 }
