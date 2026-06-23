@@ -5,7 +5,7 @@ const PUBLIC = ['/', '/login', '/restricted'];
 
 export function middleware(request) {
   const { pathname } = request.nextUrl;
-  const loggedIn = request.cookies.get('trend_auth');
+  const loggedIn = request.cookies.get('trend_token');
 
   if (!loggedIn && !PUBLIC.includes(pathname)) {
     return NextResponse.redirect(new URL('/restricted', request.url));

@@ -1,43 +1,47 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, Globe, Image as ImageIcon, BarChart2, Link2, Clapperboard } from 'lucide-react';
 import Avatar from '@/components/Avatar';
-import { currentUser } from '@/data/home';
-import { topicList } from '@/data/create';
-import { addPost } from '@/data/createdPosts';
+import api from '@/utils/api';
+import { mapProfile } from '@/utils/adapters';
 
 const MAX = 280;
 
 export default function CreatePage() {
   const router = useRouter();
   const [text, setText] = useState('');
-  const [topic, setTopic] = useState(topicList[0]);
+  const [topics, setTopics] = useState([]);
+  const [topic, setTopic] = useState(null); // { id, title }
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [me, setMe] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    api.get('/topics', { params: { limit: 50 } })
+      .then((res) => {
+        const list = res.data.map((t) => ({ id: t._id, title: t.title }));
+        setTopics(list);
+        setTopic(list[0] ?? null);
+      })
+      .catch(() => {});
+    api.get('/api/auth/me').then((res) => setMe(mapProfile(res.data))).catch(() => {});
+  }, []);
 
   const remaining = MAX - text.length;
-  const canPublish = text.trim().length > 0;
+  const canPublish = text.trim().length > 0 && !!topic;
 
-  function publish() {
+  async function publish() {
     if (!canPublish) return;
-    // shortcut: pas d'API encore -> stock mémoire + POST /posts { topic, text } plus tard
-    addPost({
-      id: Date.now(),
-      topic,
-      tab: 'community', // un post user arrive côté Community
-      pinned: false,
-      author: currentUser.name,
-      verified: false,
-      time: 'now',
-      text: text.trim(),
-      likes: 0,
-      liked: false,
-      comments: 0,
-      reposts: 0,
-    });
-    // shortcut: un seul topic mocké -> on retombe toujours sur /topic/1
-    router.push('/topic/1');
+    setError('');
+    try {
+      await api.post('/posts', { content: text.trim(), topicId: topic.id });
+      // ?tab=community : un post user arrive côté Community, on l'ouvre direct
+      router.push(`/topic/${topic.id}?tab=community`);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Could not publish. Please try again.');
+    }
   }
 
   return (
@@ -64,21 +68,21 @@ export default function CreatePage() {
           className="flex items-center gap-1 rounded-full bg-brand/10 px-3 py-1.5 text-sm"
         >
           <span className="text-faint">In</span>
-          <span className="font-medium text-press">{topic}</span>
+          <span className="font-medium text-press">{topic?.title ?? 'Select a topic'}</span>
           <ChevronDown size={14} className="text-press" />
         </button>
         {pickerOpen && (
-          <div className="absolute z-10 mt-1 w-56 rounded-2xl border border-line bg-white p-1 shadow-lg">
-            {topicList.map((t) => (
+          <div className="absolute z-10 mt-1 max-h-72 w-64 overflow-auto rounded-2xl border border-line bg-white p-1 shadow-lg">
+            {topics.map((t) => (
               <button
-                key={t}
+                key={t.id}
                 onClick={() => {
                   setTopic(t);
                   setPickerOpen(false);
                 }}
-                className={`block w-full rounded-xl px-3 py-2 text-left text-sm ${t === topic ? 'font-medium text-press' : 'text-ink'}`}
+                className={`block w-full rounded-xl px-3 py-2 text-left text-sm ${t.id === topic?.id ? 'font-medium text-press' : 'text-ink'}`}
               >
-                {t}
+                {t.title}
               </button>
             ))}
           </div>
@@ -87,13 +91,15 @@ export default function CreatePage() {
 
       {/* auteur + visibilité */}
       <div className="mt-5 flex items-center gap-2">
-        <Avatar name={currentUser.name} size={40} />
-        <span className="font-title font-semibold text-ink">{currentUser.name}</span>
+        <Avatar name={me?.name || 'You'} size={40} />
+        <span className="font-title font-semibold text-ink">{me?.name || 'You'}</span>
         {/* shortcut: visibilité non branchée (toujours Public en v1) */}
         <button className="ml-1 flex items-center gap-1 rounded-full border border-line bg-white px-2.5 py-1 text-xs font-medium text-ink">
           <Globe size={13} /> Public
         </button>
       </div>
+
+      {error && <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
       {/* zone de texte */}
       <textarea

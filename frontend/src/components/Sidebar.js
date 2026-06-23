@@ -1,10 +1,13 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Compass, Bell, User, Plus, Vote, Droplet, Trophy } from 'lucide-react';
 import Avatar from './Avatar';
-import { currentUser, themes } from '@/data/home';
+import api from '@/utils/api';
+import { mapProfile } from '@/utils/adapters';
+import { themes } from '@/data/home';
 
 // nav alignée sur la BottomNav mobile (mêmes routes/labels)
 const nav = [
@@ -19,6 +22,12 @@ const themeIcons = { compass: Compass, vote: Vote, droplet: Droplet, trophy: Tro
 // sidebar desktop uniquement (cachée < lg) — remplace la topbar mobile
 export default function Sidebar() {
   const path = usePathname();
+  const [me, setMe] = useState(null);
+
+  // profil courant pour le pied de sidebar (GET /api/auth/me)
+  useEffect(() => {
+    api.get('/api/auth/me').then((r) => setMe(mapProfile(r.data))).catch(() => {});
+  }, []);
 
   return (
     <aside className="sticky top-0 hidden h-screen flex-col gap-1 overflow-y-auto border-r border-line px-5 py-6 lg:flex">
@@ -80,10 +89,10 @@ export default function Sidebar() {
       })}
 
       <Link href="/profile" className="mt-auto flex items-center gap-3 rounded-2xl p-2.5 transition hover:bg-brand/5">
-        <Avatar name={currentUser.name} size={40} />
+        <Avatar name={me?.name ?? 'Toi'} size={40} />
         <div className="min-w-0 leading-tight">
-          <div className="truncate font-title text-sm font-bold text-ink">{currentUser.name}</div>
-          <div className="truncate text-xs text-faint">@camille</div>
+          <div className="truncate font-title text-sm font-bold text-ink">{me?.name ?? 'Mon profil'}</div>
+          <div className="truncate text-xs text-faint">{me?.handle ?? ''}</div>
         </div>
       </Link>
     </aside>
