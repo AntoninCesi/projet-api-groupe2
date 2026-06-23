@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Apple, Eye, EyeOff, AtSign, Mail, Lock, ArrowRight, Check } from 'lucide-react';
-import { login } from '@/utils/auth';
+import { Eye, EyeOff, AtSign, Mail, Lock, ArrowRight, Check } from 'lucide-react';
+import api from '@/utils/api';
+import { setToken } from '@/utils/auth';
 import { interests } from '@/data/auth';
 
 export default function LoginPage() {
@@ -14,15 +15,29 @@ export default function LoginPage() {
   const [picks, setPicks] = useState([]);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [wantEmails, setWantEmails] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   function togglePick(it) {
     setPicks((p) => (p.includes(it) ? p.filter((x) => x !== it) : [...p, it]));
   }
 
-  function handleSubmit() {
-    login();
-    // hard reload: middleware + pages relisent le cookie tout de suite
-    window.location.href = '/';
+  async function handleSubmit() {
+    if (!canSubmit || loading) return;
+    setError('');
+    setLoading(true);
+    try {
+      if (mode === 'signup') {
+        await api.post('/api/auth/register', { username, email, password: pwd });
+      }
+      const res = await api.post('/api/auth/login', { email, password: pwd });
+      setToken(res.data.token);
+      // hard reload: middleware 
+      window.location.href = '/';
+    } catch (err) {
+      setError(err.response?.data?.error || 'Something went wrong. Please try again.');
+      setLoading(false);
+    }
   }
 
   const canSubmit = mode === 'login'
@@ -97,13 +112,16 @@ export default function LoginPage() {
         </>
       )}
 
+      {error && <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+
       {/* submit */}
       <button
         onClick={handleSubmit}
-        disabled={!canSubmit}
-        className={`mt-6 flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-semibold text-white ${canSubmit ? 'bg-brand-grad' : 'bg-brand/40'}`}
+        disabled={!canSubmit || loading}
+        className={`mt-6 flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-semibold text-white ${canSubmit && !loading ? 'bg-brand-grad' : 'bg-brand/40'}`}
       >
-        {mode === 'login' ? 'Log in' : 'Create my account'} <ArrowRight size={18} />
+        {loading ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Create my account'}
+        {!loading && <ArrowRight size={18} />}
       </button>
     </main>
   );
