@@ -19,14 +19,14 @@ export default function BottomNav() {
   const path = usePathname();
 
   return (
-    <nav className="fixed bottom-4 left-1/2 z-10 flex w-[calc(100%-2.5rem)] max-w-[22rem] -translate-x-1/2 items-center justify-between rounded-full border border-line bg-white px-6 py-3 shadow-lg">
-      <NavLink href="/" icon={Home} label="Accueil" active={path === '/'} />
-      <NavLink href="/explore" icon={Compass} label="Explorer" active={path === '/explore'} />
-      <Link href="/create" aria-label="Créer" className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand text-white shadow-md shadow-brand/30">
+    <nav className="glass glass-lg fixed bottom-4 left-1/2 z-10 flex w-[calc(100%-2.5rem)] max-w-[22rem] -translate-x-1/2 items-center justify-between rounded-full px-6 py-3">
+      <NavLink href="/" icon={Home} label="Home" active={path === '/'} />
+      <NavLink href="/explore" icon={Compass} label="Explore" active={path === '/explore'} />
+      <Link href="/create" aria-label="Create" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-grad text-onbrand shadow-glow">
         <Plus size={24} />
       </Link>
-      <NavLink href="/activity" icon={Bell} label="Activité" active={path === '/activity'} />
-      <NavLink href="/profile" icon={User} label="Profil" active={path === '/profile'} />
+      <NavLink href="/activity" icon={Bell} label="Activity" active={path === '/activity'} />
+      <NavLink href="/profile" icon={User} label="Profile" active={path === '/profile'} />
     </nav>
   );
 }

@@ -2,7 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
+/* fond lumineux « aube turquoise », jamais gris plat */
 body {
-  background-color: #eff5f3;
+  background: radial-gradient(120% 46% at 50% 0%, #eafbf7 0%, rgba(234, 251, 247, 0) 52%), #eff5f3;
+  background-attachment: fixed;
   color: #0c1b19;
+  min-height: 100vh;
+}
+
+@layer components {
+  /* glass = accent only (nav, chips, search, boutons secondaires) — jamais sur le contenu */
+  .glass {
+    background: rgba(255, 255, 255, 0.55);
+    -webkit-backdrop-filter: blur(16px) saturate(170%);
+    backdrop-filter: blur(16px) saturate(170%);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 1px 2px rgba(8, 30, 28, 0.04),
+      0 8px 24px -12px rgba(8, 40, 37, 0.18);
+  }
+  .glass-lg {
+    -webkit-backdrop-filter: blur(24px) saturate(170%);
+    backdrop-filter: blur(24px) saturate(170%);
+  }
+}
+
+/* focus clavier toujours visible (turquoise) */
+:focus-visible {
+  outline: 2px solid #06c2b2;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* respecte prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

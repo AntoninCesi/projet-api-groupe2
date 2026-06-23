@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { User, BadgeCheck, ArrowUpRight, ArrowDownRight, ArrowRight } from 'lucide-react';
 import Shell from '@/components/Shell';
+import HeatDial from '@/components/HeatDial';
 import ThemeCard from '@/components/ThemeCard';
 import api from '@/utils/api';
 import { mapTopic } from '@/utils/adapters';
@@ -49,11 +50,8 @@ export default async function Home() {
           <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">— Featured</h2>
           <div className="mt-2 flex items-start justify-between gap-3">
             <h1 className="font-title text-3xl font-bold leading-tight text-ink lg:text-4xl">{featured.title}</h1>
-            {/* jauge de chaleur */}
-            <div className="flex h-20 w-20 shrink-0 flex-col items-center justify-center rounded-full border-4 border-brand">
-              <span className="font-title text-xl font-bold text-ink">{featured.degree}°</span>
-              {featured.onFire && <span className="text-[9px] font-semibold uppercase tracking-wide text-brand">On fire</span>}
-            </div>
+            {/* cadran de chaleur (motif signature) */}
+            <HeatDial heat={featured.degree} onFire={featured.onFire} size={84} />
           </div>
 
           {/* chips */}
