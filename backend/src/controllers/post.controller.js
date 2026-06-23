@@ -164,7 +164,47 @@ const addReply = async (req, res) => {
     }
 };
 
-// list all posts
+// Toggle like on a comment
+const likeComment = async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+        const comment = post.comments.id(req.params.commentId);
+        if (!comment) return res.status(404).json({ error: 'Comment not found' });
+
+        const userId = req.user.id;
+        const already = comment.likes.some(id => id.equals(userId));
+        already ? comment.likes.pull(userId) : comment.likes.push(userId);
+        await post.save();
+
+        res.json({ liked: !already, likesCount: comment.likes.length });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// Toggle like on a reply
+const likeReply = async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+        const comment = post.comments.id(req.params.commentId);
+        if (!comment) return res.status(404).json({ error: 'Comment not found' });
+        const reply = comment.replies.id(req.params.replyId);
+        if (!reply) return res.status(404).json({ error: 'Reply not found' });
+
+        const userId = req.user.id;
+        const already = reply.likes.some(id => id.equals(userId));
+        already ? reply.likes.pull(userId) : reply.likes.push(userId);
+        await post.save();
+
+        res.json({ liked: !already, likesCount: reply.likes.length });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// List all posts
 const listPosts = async (req, res) => {
     const { topicId, page = 1, limit = 20 } = req.query;
     const filter = topicId ? { topicId } : {};
@@ -181,7 +221,7 @@ const listPosts = async (req, res) => {
     }
 };
 
-// chronological feed (from followed users)
+// Chronological feed (from followed users)
 const getFeed = async (req, res) => {
     const { page = 1, limit = 20 } = req.query;
     try {
@@ -198,4 +238,4 @@ const getFeed = async (req, res) => {
     }
 };
 
-module.exports = { createPost, getPost, likePost, addComment, addReply, listPosts, getFeed };
+module.exports = { createPost, getPost, likePost, addComment, addReply, likeComment, likeReply, listPosts, getFeed };
