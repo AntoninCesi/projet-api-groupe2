@@ -23,27 +23,26 @@ function FollowRow({ name, sub, initial }) {
           on ? 'bg-brand/10 text-press' : 'border border-line bg-white text-muted hover:border-brand hover:text-press'
         }`}
       >
-        {on ? 'Suivi' : '+ Suivre'}
+        {on ? 'Following' : '+ Follow'}
       </button>
     </div>
   );
 }
 
-// rail droit desktop uniquement (caché < lg)
 export default function RailHome() {
   return (
     <aside className="sticky top-0 hidden h-screen flex-col gap-5 overflow-y-auto border-l border-line px-6 py-6 lg:flex">
       <div className="flex h-12 items-center gap-2.5 rounded-2xl border border-line bg-white px-4 text-faint">
         <Search size={18} />
         <input
-          placeholder="Rechercher un sujet…"
-          aria-label="Rechercher un sujet"
+          placeholder="Search a topic…"
+          aria-label="Search a topic"
           className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-faint"
         />
       </div>
 
       <div className="rounded-2xl border border-line bg-white p-4">
-        <div className="font-title text-sm font-bold text-ink">Thèmes à suivre</div>
+        <div className="font-title text-sm font-bold text-ink">Themes to follow</div>
         <div className="mt-3 flex flex-col gap-3.5">
           {themes.slice(0, 3).map((t, i) => (
             <FollowRow key={t.id} name={t.name} sub={t.actives} initial={i === 0} />
@@ -52,7 +51,7 @@ export default function RailHome() {
       </div>
 
       <div className="rounded-2xl border border-line bg-white p-4">
-        <div className="font-title text-sm font-bold text-ink">Sources officielles</div>
+        <div className="font-title text-sm font-bold text-ink">Official sources</div>
         <div className="mt-3 flex flex-col gap-3.5">
           {sources.map((n) => (
             <div key={n} className="flex items-center gap-3">
@@ -61,7 +60,7 @@ export default function RailHome() {
                 <div className="flex items-center gap-1 font-title text-[13.5px] font-bold text-ink">
                   {n} <BadgeCheck size={14} className="text-brand" />
                 </div>
-                <div className="text-[11.5px] text-faint">Source officielle</div>
+                <div className="text-[11.5px] text-faint">Official source</div>
               </div>
             </div>
           ))}
