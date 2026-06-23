@@ -7,6 +7,7 @@ const userRoutes = require('./routes/user.routes');
 const topicRoutes = require('./routes/topic.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const messageRoutes = require('./routes/message.routes');
+const themeRoutes = require('./routes/theme.routes');
 const { startSyncJob } = require('./jobs/polymarketSync');
 const cors = require('cors');
 
@@ -20,6 +21,7 @@ app.use('/users', userRoutes);
 app.use('/topics', topicRoutes);
 app.use('/notifications', notificationRoutes);
 app.use('/messages', messageRoutes);
+app.use('/themes', themeRoutes);
 
 const PORT = process.env.PORT || 3000;
 

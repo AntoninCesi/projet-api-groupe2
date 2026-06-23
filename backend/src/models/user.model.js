@@ -63,6 +63,11 @@ const userSchema = new Schema({
     ref: 'Topic',
     default: []
   },
+  // thèmes suivis = noms de catégories (ex: 'Politics', 'Sport')
+  followedThemes: {
+    type: [String],
+    default: []
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

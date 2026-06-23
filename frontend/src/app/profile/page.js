@@ -7,14 +7,25 @@ import ThemeCard from '@/components/ThemeCard';
 import BottomNav from '@/components/BottomNav';
 import Avatar from '@/components/Avatar';
 import api from '@/utils/api';
-import { mapProfile } from '@/utils/adapters';
-import { profile as mockProfile } from '@/data/profile';
+import { mapProfile, mapTheme } from '@/utils/adapters';
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
+  const [themes, setThemes] = useState([]);
 
   useEffect(() => {
-    api.get('/api/auth/me').then((res) => setProfile(mapProfile(res.data))).catch(() => {});
+    api.get('/api/auth/me')
+      .then(async (res) => {
+        setProfile(mapProfile(res.data));
+        // "My Themes" = thèmes suivis -> on récupère leurs stats via /themes
+        const followed = res.data.followedThemes ?? [];
+        if (followed.length === 0) return;
+        try {
+          const all = await api.get('/themes');
+          setThemes(all.data.filter((t) => followed.includes(t.name)).map((t) => mapTheme(t)));
+        } catch { /* /themes indispo -> on n'affiche rien */ }
+      })
+      .catch(() => {});
   }, []);
 
   const name = profile?.name ?? '…';
@@ -22,8 +33,6 @@ export default function ProfilePage() {
   const avatar = profile?.avatar ?? null;
   const bio = profile?.bio ?? '';
   const stats = profile?.stats ?? { topics: 0, following: 0, karma: 0 };
-  // shortcut: "My Themes" encore mocké (pas d'endpoint dédié côté back)
-  const themes = mockProfile.themes;
 
   return (
     <main className="mx-auto min-h-screen max-w-md bg-background px-5 pb-28">
@@ -52,15 +61,21 @@ export default function ProfilePage() {
         <Stat value={stats.karma} label="Karma" />
       </div>
 
-      {/* mes thèmes */}
+      {/* mes thèmes suivis */}
       <div className="mt-8 flex items-center justify-between">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-brand">— My Themes</h2>
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        {themes.map((t) => (
-          <ThemeCard key={t.id} theme={t} />
-        ))}
-      </div>
+      {themes.length === 0 ? (
+        <p className="mt-4 text-sm text-faint">
+          You don’t follow any theme yet. <Link href="/explore" className="font-medium text-brand">Explore themes</Link>
+        </p>
+      ) : (
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          {themes.map((t) => (
+            <ThemeCard key={t.id} theme={t} />
+          ))}
+        </div>
+      )}
 
       <BottomNav />
     </main>
