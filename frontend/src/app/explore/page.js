@@ -1,21 +1,12 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, ChevronRight, Landmark, Trophy, Cpu, TrendingUp, Image, FlaskConical } from 'lucide-react';
 import Shell from '@/components/Shell';
 import api from '@/utils/api';
 import { mapTopic } from '@/utils/adapters';
 import { explore } from '@/data/explore';
-
-async function getHotTopics() {
-  try {
-    const res = await api.get('/topics', { params: { limit: 12 } });
-    return res.data.map((t) => ({
-      ...mapTopic(t),
-      meta: `${t.postsCount ?? 0} posts · ${t.participantsCount ?? 0} participants`,
-    }));
-  } catch {
-    return [];
-  }
-}
 
 const categoryIcons = {
   politics: Landmark,
@@ -26,9 +17,31 @@ const categoryIcons = {
   science: FlaskConical,
 };
 
-export default async function ExplorePage() {
-  const hot = await getHotTopics();
-  const { categories } = explore;
+export default function ExplorePage() {
+  const [query, setQuery] = useState('');
+  const [topics, setTopics] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get('/topics', { params: { limit: 12 } })
+      .then((res) =>
+        setTopics(
+          res.data.map((t) => ({
+            ...mapTopic(t),
+            meta: `${t.postsCount ?? 0} posts · ${t.participantsCount ?? 0} participants`,
+          }))
+        )
+      )
+      .catch(() => setTopics([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const q = query.trim().toLowerCase();
+  const matchTopics = q ? topics.filter((t) => t.title.toLowerCase().includes(q)) : topics;
+  const matchCategories = q
+    ? explore.categories.filter((c) => c.name.toLowerCase().includes(q))
+    : explore.categories;
+  const noResult = q && matchTopics.length === 0 && matchCategories.length === 0;
 
   return (
     <Shell>
@@ -41,31 +54,49 @@ export default async function ExplorePage() {
         <Search size={18} className="text-faint" />
         <input
           type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
           placeholder="Search a topic or a theme…"
           className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-faint"
         />
       </div>
 
-      <h2 className="mt-7 text-xs font-semibold uppercase tracking-wide text-brand">Hot trends</h2>
-      <div className="mt-3 space-y-3">
-        {hot.map((t) => (
-          <HotTopic key={t.id} topic={t} />
-        ))}
-      </div>
+      {loading ? (
+        <p className="mt-8 text-center text-sm text-faint">Loading…</p>
+      ) : noResult ? (
+        <p className="mt-8 text-center text-sm text-faint">No results for “{query}”.</p>
+      ) : (
+        <>
+          {matchTopics.length > 0 && (
+            <>
+              <h2 className="mt-7 text-xs font-semibold uppercase tracking-wide text-brand">{q ? 'Topics' : 'Hot trends'}</h2>
+              <div className="mt-3 space-y-3">
+                {matchTopics.map((t) => (
+                  <HotTopic key={t.id} topic={t} />
+                ))}
+              </div>
+            </>
+          )}
 
-      <h2 className="mt-8 text-xs font-semibold uppercase tracking-wide text-brand">Themes</h2>
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        {categories.map((c) => (
-          <CategoryCard key={c.id} category={c} />
-        ))}
-      </div>
+          {matchCategories.length > 0 && (
+            <>
+              <h2 className="mt-8 text-xs font-semibold uppercase tracking-wide text-brand">Themes</h2>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                {matchCategories.map((c) => (
+                  <CategoryCard key={c.id} category={c} />
+                ))}
+              </div>
+            </>
+          )}
+        </>
+      )}
     </Shell>
   );
 }
 
 function HotTopic({ topic }) {
   return (
-    <Link href={`/topic/${topic.id}`} className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface p-3 text-left transition hover:border-brand/40 hover:shadow-soft">
+    <Link href={`/topic/${topic.id}`} className="flex w-full items-center gap-3 rounded-2xl border border-line/70 p-3 text-left transition hover:border-brand/40">
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand/10 font-title font-bold text-brand">
         {topic.degree}°
       </div>
@@ -81,7 +112,7 @@ function HotTopic({ topic }) {
 function CategoryCard({ category }) {
   const Icon = categoryIcons[category.icon] ?? Landmark;
   return (
-    <Link href={category.link} className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 text-left transition hover:border-brand/40 hover:shadow-soft">
+    <Link href={category.link} className="flex items-center gap-3 rounded-2xl border border-line/70 p-4 text-left transition hover:border-brand/40">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
         <Icon size={18} />
       </div>

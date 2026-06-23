@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Settings } from 'lucide-react';
+import { Settings, Mail } from 'lucide-react';
 import ThemeCard from '@/components/ThemeCard';
 import Shell from '@/components/Shell';
 import Avatar from '@/components/Avatar';
@@ -28,7 +28,8 @@ export default function ProfilePage() {
   return (
     <Shell>
       {/* header */}
-      <div className="flex justify-end py-4 lg:pt-0">
+      <div className="flex justify-between py-4 lg:pt-0">
+        <Link href="/messages" className="text-muted" aria-label="Messages"><Mail size={22} /></Link>
         <Link href="/profile/edit" className="text-muted" aria-label="Edit profile"><Settings size={22} /></Link>
       </div>
 
@@ -53,7 +54,7 @@ export default function ProfilePage() {
 
       {/* mes thèmes */}
       <div className="mt-8 flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-brand">— My Themes</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-brand">My Themes</h2>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-3">
         {themes.map((t) => (

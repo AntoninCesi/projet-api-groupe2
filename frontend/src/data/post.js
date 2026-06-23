@@ -4,6 +4,7 @@ export const post = {
   id: 1,
   topic: 'War in Ukraine',
   author: 'Le Monde',
+  authorId: null, // shortcut: id mocké absent -> bouton Message masqué ; vrai _id via mapPost une fois branché
   verified: true,
   official: true,
   pinned: true,

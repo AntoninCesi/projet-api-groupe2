@@ -11,6 +11,7 @@ export function mapPost(p, userId) {
     id: p._id,
     text: p.content,
     author: p.authorId?.username ?? 'unknown',
+    authorId: p.authorId?._id ?? null, // pour le bouton Message (DM l'auteur)
     topic: p.topicId?.title ?? null,
     verified: p.authorId?.isVerified ?? false,
     time: timeAgo(p.createdAt),
