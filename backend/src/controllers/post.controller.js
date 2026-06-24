@@ -24,6 +24,19 @@ const createPost = async (req, res) => {
             targetId: post._id,
         });
 
+        if (repostOf) {
+            const original = await Post.findByIdAndUpdate(repostOf, { $inc: { shareCount: 1 } });
+            if (original && !original.authorId.equals(req.user.id)) {
+                await Notification.create({
+                    userId: original.authorId,
+                    actorId: req.user.id,
+                    type: 'REPOST',
+                    sourceType: 'Post',
+                    sourceId: post._id,
+                });
+            }
+        }
+
         if (post.topicId) {
             await Topic.findByIdAndUpdate(post.topicId, { $inc: { postsCount: 1 } });
         }
