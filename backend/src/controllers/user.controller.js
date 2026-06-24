@@ -77,10 +77,14 @@ const updateMe = async (req, res) => {
     }
 };
 
-// mod/admin only : suspend or band a user
+// mod/admin only : suspend or ban a user
 const setUserStatus = async (req, res) => {
     if (!['moderator', 'admin'].includes(req.user.role)){
         return res.status(403).json({ error: 'Forbidden' });
+    }
+    const { status } = req.body;
+    if (!['active', 'suspended', 'banned'].includes(status)) {
+        return res.status(400).json({ error: 'Invalid status' });
     }
     try {
         const user = await User.findByIdAndUpdate(
