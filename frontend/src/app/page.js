@@ -7,6 +7,7 @@ import ThemeCard from '@/components/ThemeCard';
 import SparkLine from '@/components/SparkLine';
 import api from '@/utils/api';
 import { mapTopic, mapTheme } from '@/utils/adapters';
+import FeedSection from '@/components/FeedSection';
 
 async function getTopics() {
   try {
@@ -128,6 +129,8 @@ export default async function Home() {
           </div>
         </section>
       )}
+
+      <FeedSection />
     </Shell>
   );
 }
