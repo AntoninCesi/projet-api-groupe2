@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { ChevronDown, ChevronRight, Search, Check } from 'lucide-react';
 
-export default function TopicPicker({ topics, value, onChange }) {
+export default function TopicPicker({ topics, value, onChange, variant = 'pick', placeholder = 'Search a topic…' }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [expanded, setExpanded] = useState(() => new Set());
@@ -45,6 +45,39 @@ export default function TopicPicker({ topics, value, onChange }) {
     });
   }
 
+  // search variant: the input IS the search bar, results drop down live as you type
+  if (variant === 'search') {
+    return (
+      <div ref={boxRef} className="relative w-full">
+        <div className="flex h-12 items-center gap-2.5 rounded-2xl border border-white/70 bg-white/55 px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-2xl backdrop-saturate-150 transition focus-within:bg-white/70">
+          <Search size={18} className="text-faint" />
+          <input
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setOpen(true);
+            }}
+            onFocus={() => setOpen(true)}
+            placeholder={placeholder}
+            className="w-full bg-transparent text-sm text-ink outline-none focus-visible:!outline-none placeholder:text-faint"
+          />
+        </div>
+
+        {open && matches && (
+          <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl border border-white/70 bg-white/55 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_18px_44px_-20px_rgba(12,27,25,0.3)] backdrop-blur-2xl backdrop-saturate-150">
+            <div className="max-h-72 overflow-auto">
+              {matches.length ? (
+                matches.slice(0, 12).map((t) => <Row key={t.id} topic={t} onPick={pick} />)
+              ) : (
+                <p className="px-3 py-6 text-center text-sm text-faint">No topic found.</p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div ref={boxRef} className="relative w-fit">
       <button
@@ -57,7 +90,7 @@ export default function TopicPicker({ topics, value, onChange }) {
       </button>
 
       {open && (
-        <div className="absolute z-20 mt-2 w-80 rounded-2xl border border-white/70 bg-white/75 p-2 backdrop-blur-2xl backdrop-saturate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_16px_40px_-20px_rgba(12,27,25,0.22)]">
+        <div className="absolute z-20 mt-2 w-80 rounded-2xl border border-white/70 bg-white/55 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_18px_44px_-20px_rgba(12,27,25,0.3)] backdrop-blur-2xl backdrop-saturate-150">
           <div className="flex items-center gap-2 rounded-xl border border-white/50 bg-white/40 px-3 py-2 transition focus-within:border-white/80 focus-within:bg-white/65">
             <Search size={15} className="text-faint" />
             <input

@@ -24,7 +24,8 @@ export default function CreatePage() {
       .then((res) => {
         const list = res.data.map((t) => ({ id: t._id, title: t.title, category: t.category }));
         setTopics(list);
-        setTopic(list[0] ?? null);
+        const wanted = new URLSearchParams(window.location.search).get('topic');
+        setTopic((wanted && list.find((t) => t.id === wanted)) || list[0] || null);
       })
       .catch(() => {});
     api.get('/api/auth/me').then((res) => setMe(mapProfile(res.data))).catch(() => {});
@@ -68,7 +69,7 @@ export default function CreatePage() {
 
       {/* auteur + visibilité */}
       <div className="mt-5 flex items-center gap-2">
-        <Avatar name={me?.name || 'You'} size={40} />
+        <Avatar name={me?.name || 'You'} src={me?.avatar} size={40} />
         <span className="font-title font-semibold text-ink">{me?.name || 'You'}</span>
         {/* shortcut: visibilité non branchée (toujours Public en v1) */}
         <button className="ml-1 flex items-center gap-1 rounded-full border border-line bg-white px-2.5 py-1 text-xs font-medium text-ink">
