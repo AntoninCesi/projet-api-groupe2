@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
-import { ArrowLeft, MoreHorizontal, MessageCircle, Repeat2, BadgeCheck, Pin, Plus } from 'lucide-react';
+import { ArrowLeft, Pencil, MessageCircle, Repeat2, BadgeCheck, Pin, Plus } from 'lucide-react';
 import Shell from '@/components/Shell';
 import LikeButton from '@/components/LikeButton';
 import Avatar from '@/components/Avatar';
@@ -14,6 +14,7 @@ import { getUserId } from '@/utils/auth';
 export default function TopicPage() {
   const { id } = useParams();
   const search = useSearchParams();
+  const myId = getUserId();
   const [topic, setTopic] = useState(null);
   const [posts, setPosts] = useState([]);
   const [following, setFollowing] = useState(false);
@@ -92,9 +93,12 @@ export default function TopicPage() {
           </p>
         )}
         {visible.map((p) => (
-          <Link key={p.id} href={`/post/${p.id}`} className="block rounded-2xl border border-line/70 p-4 transition hover:border-brand/40">
-            <Post post={p} />
-          </Link>
+          <Post
+            key={p.id}
+            post={p}
+            mine={String(p.authorId) === String(myId)}
+            onUpdate={(up) => setPosts((list) => list.map((x) => (x.id === up.id ? up : x)))}
+          />
         ))}
       </div>
     </Shell>
@@ -112,47 +116,121 @@ function TabButton({ label, active, onClick }) {
   );
 }
 
-// post sitting on the app background, separated by a line (parent's divide-y)
-function Post({ post }) {
+// avatar + author + time row (shared between read & edit modes)
+function PostHead({ post }) {
   return (
-    <article>
-      {post.pinned && (
-        <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-brand">
-          <Pin size={12} /> {post.tab === 'official' ? 'Official' : 'Community'} · Pinned
-        </p>
+    <div className="flex items-start gap-2">
+      {/* mocked posts -> logo (img); user posts -> initials avatar */}
+      {post.avatar ? (
+        <img src={post.avatar} alt={post.author} className="h-9 w-9 rounded-full object-cover" />
+      ) : (
+        <Avatar name={post.author} size={36} />
       )}
-
-      <div className="flex items-start gap-2">
-        {/* mocked posts -> logo (img); user posts -> initials avatar */}
-        {post.avatar ? (
-          <img src={post.avatar} alt={post.author} className="h-9 w-9 rounded-full object-cover" />
-        ) : (
-          <Avatar name={post.author} size={36} />
-        )}
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1">
-            <span className="font-title font-semibold text-ink">{post.author}</span>
-            {post.verified && <BadgeCheck size={15} className="text-brand" />}
-          </div>
-          <span className="text-xs text-faint">{post.time} ago</span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1">
+          <span className="font-title font-semibold text-ink">{post.author}</span>
+          {post.verified && <BadgeCheck size={15} className="text-brand" />}
         </div>
-        <button className="text-faint" aria-label="More">
-          <MoreHorizontal size={18} />
+        <span className="text-xs text-faint">{post.time} ago</span>
+      </div>
+    </div>
+  );
+}
+
+function PinnedTag({ post }) {
+  if (!post.pinned) return null;
+  return (
+    <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-brand">
+      <Pin size={12} /> {post.tab === 'official' ? 'Official' : 'Community'} · Pinned
+    </p>
+  );
+}
+
+function Post({ post, mine, onUpdate }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(post.text);
+  const [saving, setSaving] = useState(false);
+
+  function startEdit(e) {
+    // le bouton est dans un <Link> -> on bloque la navigation
+    e.preventDefault();
+    e.stopPropagation();
+    setDraft(post.text);
+    setEditing(true);
+  }
+
+  async function save() {
+    const content = draft.trim();
+    if (!content || saving) return;
+    setSaving(true);
+    try {
+      const { data } = await api.patch(`/posts/${post.id}`, { content });
+      onUpdate({ ...post, text: data.content });
+      setEditing(false);
+    } catch { /* échec -> on garde le mode édition */ }
+    finally { setSaving(false); }
+  }
+
+  // edit mode (own posts only) : textarea + Save/Cancel, no Link wrapper
+  if (editing) {
+    return (
+      <div className="rounded-2xl border border-line/70 p-4">
+        <PinnedTag post={post} />
+        <PostHead post={post} />
+        <textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          maxLength={280}
+          rows={3}
+          autoFocus
+          className="mt-2 w-full resize-none rounded-xl border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-brand"
+        />
+        <div className="mt-2 flex items-center justify-end gap-2">
+          <button onClick={() => setEditing(false)} className="rounded-full px-3 py-1.5 text-sm font-medium text-faint">
+            Cancel
+          </button>
+          <button
+            onClick={save}
+            disabled={!draft.trim() || saving}
+            className="rounded-full bg-brand px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <Link href={`/post/${post.id}`} className="block rounded-2xl border border-line/70 p-4 transition hover:border-brand/40">
+        <PinnedTag post={post} />
+        <PostHead post={post} />
+
+        <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink">{post.text}</p>
+
+        {/* actions: like is clickable, rest stays gray (// shortcut: not wired up) */}
+        <div className="mt-3 flex items-center gap-6 text-faint">
+          <LikeButton count={post.likes} liked={post.liked} size={16} postId={post.id} />
+          <span className="flex items-center gap-1.5 text-sm">
+            <MessageCircle size={16} /> {post.comments}
+          </span>
+          <span className="flex items-center gap-1.5 text-sm">
+            <Repeat2 size={16} /> {post.reposts}
+          </span>
+        </div>
+      </Link>
+
+      {/* edit button shown only on your own posts */}
+      {mine && (
+        <button
+          onClick={startEdit}
+          aria-label="Edit post"
+          className="absolute right-4 top-4 text-faint hover:text-brand"
+        >
+          <Pencil size={16} />
         </button>
-      </div>
-
-      <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink">{post.text}</p>
-
-      {/* actions: like is clickable, rest stays gray (// shortcut: not wired up) */}
-      <div className="mt-3 flex items-center gap-6 text-faint">
-        <LikeButton count={post.likes} liked={post.liked} size={16} postId={post.id} />
-        <span className="flex items-center gap-1.5 text-sm">
-          <MessageCircle size={16} /> {post.comments}
-        </span>
-        <span className="flex items-center gap-1.5 text-sm">
-          <Repeat2 size={16} /> {post.reposts}
-        </span>
-      </div>
-    </article>
+      )}
+    </div>
   );
 }
