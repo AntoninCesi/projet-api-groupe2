@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
 
     mongodb:
@@ -17,17 +15,30 @@ services:
             - "3000:3000"
         env_file:
             - ./backend/.env
+        environment:
+            # Dans le réseau Docker, le backend joint Mongo via le nom du service,
+            # pas "localhost". Cet override prime sur la valeur du .env.
+            - MONGO_HOST=mongodb
+            # Pré-remplit la base au démarrage si elle est vide (jeu de démo).
+            - SEED_ON_START=true
         depends_on:
             - mongodb
         networks:
             - breezy-network
-        
+
     frontend:
-        build: ./frontend
+        build:
+            context: ./frontend
+            args:
+                # NEXT_PUBLIC_API_URL est injecté au build (bundle navigateur).
+                # On vise localhost car l'URL est résolue par le navigateur de l'user,
+                # qui ne connaît pas le hostname Docker "backend".
+                NEXT_PUBLIC_API_URL: http://localhost:3000
+        environment:
+            # URL serveur->serveur (SSR dans le conteneur) : passe par le réseau Docker.
+            - INTERNAL_API_URL=http://backend:3000
         ports:
             - "3005:3000"
-        env_file:
-            - ./frontend/.env
         depends_on:
             - backend
         networks:
