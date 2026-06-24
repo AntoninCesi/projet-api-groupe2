@@ -91,11 +91,26 @@ async function seedUsersIfEmpty() {
         USERS.map(u => ({ ...u, email: `${u.username}@breezy.test`, password: hashed }))
     );
 
-    // Abonnements user -> user (indépendants des topics).
-    await User.findByIdAndUpdate(users[8]._id, { following: [users[0]._id, users[3]._id, users[5]._id] });
-    await User.findByIdAndUpdate(users[1]._id, { following: [users[9]._id] });
+    // Abonnements user -> user + notification FOLLOW pour la cible
+    // (comme le controller followUser : quelqu'un me suit -> je suis notifié).
+    const FOLLOWS = [
+        { follower: 8, following: [0, 3, 5] }, // ines suit alice, diana, fatima
+        { follower: 1, following: [9] },       // bob suit jamal
+    ];
+    const followNotifs = [];
+    for (const f of FOLLOWS) {
+        await User.findByIdAndUpdate(users[f.follower]._id, { following: f.following.map(i => users[i]._id) });
+        f.following.forEach(i => followNotifs.push({
+            userId: users[i]._id,
+            actorId: users[f.follower]._id,
+            type: 'FOLLOW',
+            sourceType: 'User',
+            sourceId: users[f.follower]._id,
+        }));
+    }
+    await Notification.insertMany(followNotifs);
 
-    console.log(`[seed] ${users.length} users créés (mdp commun: ${PASSWORD}).`);
+    console.log(`[seed] ${users.length} users créés + ${followNotifs.length} notifs FOLLOW (mdp commun: ${PASSWORD}).`);
 }
 
 /** Renvoie les users de test ordonnés comme le tableau USERS. */
@@ -161,10 +176,7 @@ async function seedContentIfEmpty() {
     });
     await Activity.insertMany(activities);
 
-    // Notifications, calquées sur ce que génèrent les controllers :
-    //  - like sur un post -> type LIKE pour l'auteur du post
-    //  - reply sur un commentaire -> type MENTION pour l'auteur du commentaire
-    // (jamais de notif quand on agit sur son propre contenu)
+    // Notifications, calquées sur ce que génèrent les controllers 
     const notifications = [];
     createdPosts.forEach((post, idx) => {
         const src = POSTS[idx];
