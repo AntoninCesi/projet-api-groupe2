@@ -77,4 +77,22 @@ const updateMe = async (req, res) => {
     }
 };
 
-module.exports = { getProfile, followUser, updateMe };
+// mod/admin only : suspend or band a user
+const setUserStatus = async (req, res) => {
+    if (!['moderator', 'admin'].includes(req.user.role)){
+        return res.status(403).json({ error: 'Forbidden' });
+    }
+    try {
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { status },
+            { new: true }
+        ).select('-password');
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { getProfile, followUser, updateMe, setUserStatus };
