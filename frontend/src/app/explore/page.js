@@ -33,6 +33,11 @@ export default function ExplorePage() {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('q');
+    if (q) setQuery(q);
+  }, []);
+
+  useEffect(() => {
     api.get('/themes')
       .then((res) => setCategories(res.data.map((t) => mapTheme(t))))
       .catch(() => setCategories([]));

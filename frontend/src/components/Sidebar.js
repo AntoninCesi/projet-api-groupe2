@@ -3,27 +3,48 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Compass, Bell, User, Plus, Vote, Droplet, Trophy } from 'lucide-react';
+import { Home, Compass, Bell, User, Plus, Landmark, Trophy, Cpu, TrendingUp, Image, FlaskConical } from 'lucide-react';
 import Avatar from './Avatar';
 import api from '@/utils/api';
-import { mapProfile } from '@/utils/adapters';
-import { themes } from '@/data/home';
+import { mapProfile, mapTheme } from '@/utils/adapters';
 
 const nav = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/explore', label: 'Explore', icon: Compass },
-  { href: '/activity', label: 'Activity', icon: Bell, badge: 3 },
+  { href: '/activity', label: 'Activity', icon: Bell },
   { href: '/profile', label: 'Profile', icon: User },
 ];
 
-const themeIcons = { compass: Compass, vote: Vote, droplet: Droplet, trophy: Trophy };
+const themeIcons = {
+  politics: Landmark,
+  sport: Trophy,
+  tech: Cpu,
+  economy: TrendingUp,
+  culture: Image,
+  science: FlaskConical,
+};
 
 export default function Sidebar() {
   const path = usePathname();
   const [me, setMe] = useState(null);
+  const [themes, setThemes] = useState([]);
+  const [unread, setUnread] = useState(0);
 
   useEffect(() => {
-    api.get('/api/auth/me').then((r) => setMe(mapProfile(r.data))).catch(() => {});
+    api.get('/api/auth/me')
+      .then((r) => {
+        setMe(mapProfile(r.data));
+        const followed = r.data.followedThemes ?? [];
+        return api.get('/themes').then((res) => {
+          const all = res.data.map((t) => mapTheme(t, followed));
+          const mine = all.filter((t) => t.following);
+          setThemes((mine.length ? mine : all).slice(0, 6));
+        });
+      })
+      .catch(() => {});
+    api.get('/notifications')
+      .then((r) => setUnread((r.data ?? []).filter((n) => !n.isRead).length))
+      .catch(() => {});
   }, []);
 
   return (
@@ -39,6 +60,7 @@ export default function Sidebar() {
       {nav.map((n) => {
         const Icon = n.icon;
         const active = path === n.href;
+        const badge = n.href === '/activity' && unread > 0 ? unread : null;
         return (
           <Link
             key={n.href}
@@ -49,9 +71,9 @@ export default function Sidebar() {
           >
             <Icon size={21} />
             <span>{n.label}</span>
-            {n.badge && (
+            {badge && (
               <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-[11px] font-extrabold text-white">
-                {n.badge}
+                {badge}
               </span>
             )}
           </Link>
@@ -65,28 +87,32 @@ export default function Sidebar() {
         <Plus size={18} /> New post
       </Link>
 
-      <div className="px-3.5 pb-1.5 pt-5 text-[11px] font-extrabold uppercase tracking-[0.13em] text-faint">
-        Your themes
-      </div>
-      {themes.map((t) => {
-        const Icon = themeIcons[t.icon] ?? Compass;
-        return (
-          <Link
-            key={t.id}
-            href="/explore"
-            className="flex h-[42px] items-center gap-3 rounded-xl px-3.5 text-sm font-semibold text-muted transition hover:bg-brand/5 hover:text-ink"
-          >
-            <span className="inline-flex h-[26px] w-[26px] items-center justify-center rounded-[9px] bg-brand/10 text-press">
-              <Icon size={14} />
-            </span>
-            <span className="truncate">{t.name}</span>
-            <span className="ml-auto text-xs font-extrabold tabular-nums text-press">{t.degree}°</span>
-          </Link>
-        );
-      })}
+      {themes.length > 0 && (
+        <>
+          <div className="px-3.5 pb-1.5 pt-5 text-[11px] font-extrabold uppercase tracking-[0.13em] text-faint">
+            Your themes
+          </div>
+          {themes.map((t) => {
+            const Icon = themeIcons[t.icon] ?? Landmark;
+            return (
+              <Link
+                key={t.id}
+                href={`/theme/${encodeURIComponent(t.id)}`}
+                className="flex h-[42px] items-center gap-3 rounded-xl px-3.5 text-sm font-semibold text-muted transition hover:bg-brand/5 hover:text-ink"
+              >
+                <span className="inline-flex h-[26px] w-[26px] items-center justify-center rounded-[9px] bg-brand/10 text-press">
+                  <Icon size={14} />
+                </span>
+                <span className="truncate">{t.name}</span>
+                <span className="ml-auto text-xs font-extrabold tabular-nums text-press">{t.degree}°</span>
+              </Link>
+            );
+          })}
+        </>
+      )}
 
       <Link href="/profile" className="mt-auto flex items-center gap-3 rounded-2xl p-2.5 transition hover:bg-brand/5">
-        <Avatar name={me?.name ?? 'You'} size={40} />
+        <Avatar name={me?.name ?? 'You'} src={me?.avatar} size={40} />
         <div className="min-w-0 leading-tight">
           <div className="truncate font-title text-sm font-bold text-ink">{me?.name ?? 'My profile'}</div>
           <div className="truncate text-xs text-faint">{me?.handle ?? ''}</div>
