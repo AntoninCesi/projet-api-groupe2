@@ -24,7 +24,8 @@ export default function CreatePage() {
       .then((res) => {
         const list = res.data.map((t) => ({ id: t._id, title: t.title, category: t.category }));
         setTopics(list);
-        setTopic(list[0] ?? null);
+        const wanted = new URLSearchParams(window.location.search).get('topic');
+        setTopic((wanted && list.find((t) => t.id === wanted)) || list[0] || null);
       })
       .catch(() => {});
     api.get('/api/auth/me').then((res) => setMe(mapProfile(res.data))).catch(() => {});

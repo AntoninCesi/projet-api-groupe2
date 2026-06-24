@@ -8,31 +8,23 @@ import LikeButton from '@/components/LikeButton';
 import Shell from '@/components/Shell';
 import Avatar from '@/components/Avatar';
 import api from '@/utils/api';
-import { mapProfile, mapTheme, mapPost } from '@/utils/adapters';
+import { mapProfile, mapPost } from '@/utils/adapters';
+import { useFollowedThemes } from '@/components/FollowedThemes';
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
-  const [themes, setThemes] = useState([]);
   const [posts, setPosts] = useState([]);
+  const { all, followed } = useFollowedThemes();
+  const themes = all.filter((t) => followed.includes(t.name));
 
   useEffect(() => {
     api.get('/api/auth/me')
-      .then(async (res) => {
+      .then((res) => {
         const me = res.data;
         setProfile(mapProfile(me));
-
-        // 'My Posts' : hitsory of user's posts
         api.get('/posts', { params: { authorId: me._id } })
           .then((r) => setPosts(r.data.map((p) => mapPost(p, me._id))))
           .catch(() => {});
-
-        // "My Themes" = followed themes -> fetch their stats via /themes
-        const followed = me.followedThemes ?? [];
-        if (followed.length === 0) return;
-        try {
-          const all = await api.get('/themes');
-          setThemes(all.data.filter((t) => followed.includes(t.name)).map((t) => mapTheme(t)));
-        } catch { /* /themes unavailable -> show nothing */ }
       })
       .catch(() => {});
   }, []);
@@ -129,7 +121,7 @@ function PostItem({ post }) {
 
 function Stat({ value, label }) {
   return (
-    <div className="rounded-2xl border border-line bg-white py-4 text-center">
+    <div className="rounded-2xl border border-line/70 py-4 text-center">
       <p className="font-title text-xl font-bold text-ink">{value}</p>
       <p className="mt-1 text-[11px] uppercase tracking-wide text-faint">{label}</p>
     </div>

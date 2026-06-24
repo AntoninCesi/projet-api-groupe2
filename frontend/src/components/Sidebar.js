@@ -6,7 +6,8 @@ import { usePathname } from 'next/navigation';
 import { Home, Compass, Bell, User, Plus, Landmark, Trophy, Cpu, TrendingUp, Image, FlaskConical } from 'lucide-react';
 import Avatar from './Avatar';
 import api from '@/utils/api';
-import { mapProfile, mapTheme } from '@/utils/adapters';
+import { mapProfile } from '@/utils/adapters';
+import { useFollowedThemes } from './FollowedThemes';
 
 const nav = [
   { href: '/', label: 'Home', icon: Home },
@@ -26,26 +27,18 @@ const themeIcons = {
 
 export default function Sidebar() {
   const path = usePathname();
+  const { all, followed } = useFollowedThemes();
   const [me, setMe] = useState(null);
-  const [themes, setThemes] = useState([]);
   const [unread, setUnread] = useState(0);
 
   useEffect(() => {
-    api.get('/api/auth/me')
-      .then((r) => {
-        setMe(mapProfile(r.data));
-        const followed = r.data.followedThemes ?? [];
-        return api.get('/themes').then((res) => {
-          const all = res.data.map((t) => mapTheme(t, followed));
-          const mine = all.filter((t) => t.following);
-          setThemes((mine.length ? mine : all).slice(0, 6));
-        });
-      })
-      .catch(() => {});
+    api.get('/api/auth/me').then((r) => setMe(mapProfile(r.data))).catch(() => {});
     api.get('/notifications')
       .then((r) => setUnread((r.data ?? []).filter((n) => !n.isRead).length))
       .catch(() => {});
   }, []);
+
+  const mine = all.filter((t) => followed.includes(t.name)).slice(0, 6);
 
   return (
     <aside className="sticky top-0 hidden h-screen flex-col gap-1 overflow-y-auto border-r border-white/60 bg-white/45 px-5 py-6 backdrop-blur-2xl backdrop-saturate-150 lg:flex">
@@ -87,12 +80,12 @@ export default function Sidebar() {
         <Plus size={18} /> New post
       </Link>
 
-      {themes.length > 0 && (
+      {mine.length > 0 && (
         <>
           <div className="px-3.5 pb-1.5 pt-5 text-[11px] font-extrabold uppercase tracking-[0.13em] text-faint">
             Your themes
           </div>
-          {themes.map((t) => {
+          {mine.slice(0, 5).map((t) => {
             const Icon = themeIcons[t.icon] ?? Landmark;
             return (
               <Link
@@ -108,6 +101,11 @@ export default function Sidebar() {
               </Link>
             );
           })}
+          {mine.length > 5 && (
+            <Link href="/profile" className="px-3.5 pt-1.5 text-xs font-bold text-press transition hover:underline">
+              View all ({mine.length})
+            </Link>
+          )}
         </>
       )}
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
-import { ArrowLeft, MoreHorizontal, MessageCircle, Repeat2, BadgeCheck, Pin } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, MessageCircle, Repeat2, BadgeCheck, Pin, Plus } from 'lucide-react';
 import Shell from '@/components/Shell';
 import LikeButton from '@/components/LikeButton';
 import Avatar from '@/components/Avatar';
@@ -75,8 +75,22 @@ export default function TopicPage() {
         <TabButton label="Community" active={tab === 'community'} onClick={() => setTab('community')} />
       </div>
 
+      {tab === 'community' && (
+        <Link
+          href={`/create?topic=${id}`}
+          className="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-brand-grad py-3 text-sm font-bold text-onbrand shadow-glowsm transition hover:-translate-y-px"
+        >
+          <Plus size={16} /> Create a post
+        </Link>
+      )}
+
       {/* posts of the current tab -> click opens the post + comments page */}
       <div className="mt-3 space-y-3">
+        {visible.length === 0 && (
+          <p className="py-10 text-center text-sm text-faint">
+            {tab === 'community' ? 'No community posts yet. Be the first.' : 'No official posts yet.'}
+          </p>
+        )}
         {visible.map((p) => (
           <Link key={p.id} href={`/post/${p.id}`} className="block rounded-2xl border border-line/70 p-4 transition hover:border-brand/40">
             <Post post={p} />
