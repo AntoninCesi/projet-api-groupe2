@@ -40,7 +40,7 @@ export default function FeedSection() {
               <p className="mt-2 text-sm text-ink">{p.text}</p>
             </Link>
             <div className="mt-2 flex items-center gap-4">
-              <LikeButton postId={p.id} initialLiked={p.liked} initialCount={p.likes} />
+              <LikeButton postId={p.id} liked={p.liked} count={p.likes} />
               <Link href={`/post/${p.id}`} className="text-xs text-faint">{p.comments} comments</Link>
             </div>
           </div>
