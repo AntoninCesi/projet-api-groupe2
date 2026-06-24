@@ -9,6 +9,7 @@ import SparkLine from '@/components/SparkLine';
 import api from '@/utils/api';
 import { mapTopic } from '@/utils/adapters';
 import { formatCount } from '@/utils/format';
+import { useFollowedThemes } from '@/components/FollowedThemes';
 
 const filters = ['All', 'On fire', 'Official'];
 
@@ -33,9 +34,11 @@ export default function ThemePage() {
   const { id } = useParams(); // = category name (already decoded by Next)
   const name = decodeURIComponent(id);
 
+  const { followed, toggle } = useFollowedThemes();
+  const following = followed.includes(name);
+
   const [theme, setTheme] = useState(null);
   const [topics, setTopics] = useState([]);
-  const [following, setFollowing] = useState(false);
   const [filter, setFilter] = useState('All');
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -53,25 +56,9 @@ export default function ThemePage() {
       } finally {
         if (alive) setLoading(false);
       }
-      // "following" state from the current profile (ignored if not signed in)
-      try {
-        const me = await api.get('/api/auth/me');
-        if (alive) setFollowing((me.data.followedThemes ?? []).includes(name));
-      } catch { /* not signed in -> not following */ }
     })();
     return () => { alive = false; };
   }, [name]);
-
-  async function toggleFollow() {
-    const prev = following;
-    setFollowing(!prev); // optimistic
-    try {
-      const { data } = await api.post(`/themes/${encodeURIComponent(name)}/follow`);
-      setFollowing(data.following);
-    } catch {
-      setFollowing(prev); // failure (e.g. not signed in) -> roll back
-    }
-  }
 
   const shownTopics = topics.filter((t) =>
     filter === 'All' ? true : filter === 'Official' ? t.official : t.onFire
@@ -109,7 +96,7 @@ export default function ThemePage() {
       </div>
 
       {/* theme card */}
-      <section className="rounded-3xl border border-line bg-white p-5">
+      <section className="rounded-3xl border border-line/70 p-5">
         <div className="flex items-center gap-3">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-grad text-white">
             <Leaf size={24} />
@@ -122,7 +109,7 @@ export default function ThemePage() {
 
         {/* follow button (wired up) */}
         <button
-          onClick={toggleFollow}
+          onClick={() => toggle(name)}
           className={`mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3 font-semibold ${
             following ? 'border border-brand text-brand' : 'bg-brand text-white'
           }`}
@@ -153,7 +140,7 @@ export default function ThemePage() {
             key={f}
             onClick={() => setFilter(f)}
             className={`flex shrink-0 items-center gap-1 rounded-full px-4 py-2 text-sm font-medium ${
-              filter === f ? 'bg-brand/10 text-brand' : 'border border-line bg-white text-muted'
+              filter === f ? 'bg-brand/10 text-brand' : 'border border-line/70 text-muted'
             }`}
           >
             {f === 'On fire' && <Flame size={14} />}
