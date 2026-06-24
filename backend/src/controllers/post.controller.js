@@ -226,10 +226,13 @@ const likeReply = async (req, res) => {
     }
 };
 
-// List all posts
+// List all posts (filtrable par topic et/ou auteur)
 const listPosts = async (req, res) => {
-    const { topicId, page = 1, limit = 20 } = req.query;
-    const filter = topicId ? { topicId } : {};
+    const { topicId, authorId, tag, page = 1, limit = 20 } = req.query;
+    const filter = {};
+    if (topicId) filter.topicId = topicId;
+    if (authorId) filter.authorId = authorId;
+    if (tag) filter.tags = tag;
     try {
         const posts = await Post.find(filter)
             .populate('authorId', 'username avatarUrl isVerified isOfficialSource')

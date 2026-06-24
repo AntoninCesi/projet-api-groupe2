@@ -3,6 +3,9 @@ const Activity = require('../models/activity.model');
 const Post = require('../models/post.model');
 
 const POLYMARKET_URL = 'https://gamma-api.polymarket.com/events?active=true&closed=false&order=volume24hr&ascending=false&limit=100';
+const POLYMARKET_TIMEOUT_MS = 10000;     // coupe le fetch s'il pend (réseau lent/bloqué)
+const SYNC_INTERVAL_MS = 15 * 60 * 1000; // resynchro toutes les 15 min
+const SYNC_FIRST_DELAY_MS = 60 * 1000;   // 1re synchro décalée: le serveur répond tout de suite
 
 const logNorm = (val) => val > 0 ? Math.log(val + 1) : 0;
 
@@ -60,8 +63,16 @@ const recalculateDegrees = async () => {
 // fetch events from Polymarket and upsert Topics
 const syncPolymarket = async () => {
     try {
-        const res = await fetch(POLYMARKET_URL);
-        const events = await res.json();
+        // fetch borné par un timeout: sinon il peut pendre indéfiniment (fetch n'a pas de timeout par défaut)
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), POLYMARKET_TIMEOUT_MS);
+        let events;
+        try {
+            const res = await fetch(POLYMARKET_URL, { signal: controller.signal });
+            events = await res.json();
+        } finally {
+            clearTimeout(timer);
+        }
 
         for (const event of events) {
             // catégorie = 1er tag Polymarket (sert de "thème" côté app), best-effort
@@ -87,10 +98,15 @@ const syncPolymarket = async () => {
     }
 };
 
-// run once at startup then every 15mn
+// première synchro décalée puis toutes les 15mn.
+// ENABLE_SYNC=false coupe la synchro (utile en dev: évite les rafales à chaque restart nodemon).
 const startSyncJob = () => {
-    syncPolymarket();
-    setInterval(syncPolymarket, 15 * 60 * 1000);
+    if (process.env.ENABLE_SYNC === 'false') {
+        console.log('Polymarket sync disabled (ENABLE_SYNC=false)');
+        return;
+    }
+    setTimeout(syncPolymarket, SYNC_FIRST_DELAY_MS);
+    setInterval(syncPolymarket, SYNC_INTERVAL_MS);
 };
 
 module.exports = { startSyncJob };

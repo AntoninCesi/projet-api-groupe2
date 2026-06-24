@@ -2,23 +2,32 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Settings, Mail } from 'lucide-react';
+import { Settings, Mail, MessageCircle, Repeat2 } from 'lucide-react';
 import ThemeCard from '@/components/ThemeCard';
+import LikeButton from '@/components/LikeButton';
 import Shell from '@/components/Shell';
 import Avatar from '@/components/Avatar';
 import api from '@/utils/api';
-import { mapProfile, mapTheme } from '@/utils/adapters';
+import { mapProfile, mapTheme, mapPost } from '@/utils/adapters';
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
   const [themes, setThemes] = useState([]);
+  const [posts, setPosts] = useState([]);
 
   useEffect(() => {
     api.get('/api/auth/me')
       .then(async (res) => {
-        setProfile(mapProfile(res.data));
+        const me = res.data;
+        setProfile(mapProfile(me));
+
+        // 'My Posts' : hitsory of user's posts
+        api.get('/posts', { params: { authorId: me._id } })
+          .then((r) => setPosts(r.data.map((p) => mapPost(p, me._id))))
+          .catch(() => {});
+
         // "My Themes" = followed themes -> fetch their stats via /themes
-        const followed = res.data.followedThemes ?? [];
+        const followed = me.followedThemes ?? [];
         if (followed.length === 0) return;
         try {
           const all = await api.get('/themes');
@@ -77,7 +86,44 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* my posts */}
+      <div className="mt-8 flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-brand">My Posts</h2>
+      </div>
+      {posts.length === 0 ? (
+        <p className="mt-4 text-sm text-faint">
+          You haven’t posted anything yet. <Link href="/create" className="font-medium text-brand">Create a post</Link>
+        </p>
+      ) : (
+        <div className="mt-2 divide-y divide-line">
+          {posts.map((p) => (
+            <PostItem key={p.id} post={p} />
+          ))}
+        </div>
+      )}
+
     </Shell>
+  );
+}
+
+function PostItem({ post }) {
+  return (
+    <Link href={`/post/${post.id}`} className="block py-4">
+      {post.topic && (
+        <p className="mb-1 text-xs font-medium text-brand">{post.topic}</p>
+      )}
+      <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-ink">{post.text}</p>
+      <div className="mt-2 flex items-center gap-6 text-faint">
+        <span className="text-xs text-faint">{post.time} ago</span>
+        <LikeButton count={post.likes} liked={post.liked} size={15} postId={post.id} />
+        <span className="flex items-center gap-1.5 text-sm">
+          <MessageCircle size={15} /> {post.comments}
+        </span>
+        <span className="flex items-center gap-1.5 text-sm">
+          <Repeat2 size={15} /> {post.reposts}
+        </span>
+      </div>
+    </Link>
   );
 }
 
