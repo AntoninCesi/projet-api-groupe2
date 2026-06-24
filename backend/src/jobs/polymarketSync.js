@@ -51,7 +51,17 @@ const recalculateDegrees = async () => {
             : 0;
 
         // snapshot pour les sparklines, on garde les 48 derniers points (~12h à 15mn)
-        topic.history.push({ t: Math.floor(Date.now() / 1000), p: topic.degree });
+        const now = Math.floor(Date.now() / 1000);
+        // Topic tout juste créé (aucun historique) : on amorce la courbe avec
+        // quelques points, sinon il faut plusieurs cycles de 15 min avant qu'une
+        // sparkline apparaisse (le front n'affiche rien en dessous de 2 points).
+        if (topic.history.length === 0) {
+            const step = SYNC_INTERVAL_MS / 1000;
+            for (let k = 5; k >= 1; k--) {
+                topic.history.push({ t: now - k * step, p: Math.max(0, Math.round(topic.degree * (1 - k * 0.06))) });
+            }
+        }
+        topic.history.push({ t: now, p: topic.degree });
         if (topic.history.length > 48) {
             topic.history = topic.history.slice(-48);
         }

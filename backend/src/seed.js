@@ -15,6 +15,7 @@ const connectDB = require('./config/database.config');
 const User = require('./models/user.model');
 const Topic = require('./models/topic.model');
 const Post = require('./models/post.model');
+const Activity = require('./models/activity.model');
 
 const PASSWORD = 'Password123!';
 
@@ -82,7 +83,12 @@ function buildHistory(base) {
 
 /** Insère tout le jeu de données (reset complet : vide puis re-remplit). */
 async function seed() {
-    await Promise.all([User.deleteMany({}), Topic.deleteMany({}), Post.deleteMany({})]);
+    await Promise.all([
+        User.deleteMany({}),
+        Topic.deleteMany({}),
+        Post.deleteMany({}),
+        Activity.deleteMany({}),
+    ]);
 
     const hashed = await bcrypt.hash(PASSWORD, 10);
     const users = await User.insertMany(
@@ -130,13 +136,29 @@ async function seed() {
     }));
     const createdPosts = await Post.insertMany(posts);
 
+    // Documents Activity : c'est CETTE collection qui alimente le calcul de "chaleur"
+    // (degree) dans polymarketSync. Sans ça, les topics communautaires restent à 0.
+    // createdPosts est dans le même ordre que POSTS -> on relie chaque post à son source.
+    const activities = [];
+    createdPosts.forEach((post, idx) => {
+        const src = POSTS[idx];
+        activities.push({ userId: post.authorId, type: 'POST', targetType: 'Post', targetId: post._id });
+        (src.likes || []).forEach(i => {
+            activities.push({ userId: users[i]._id, type: 'LIKE', targetType: 'Post', targetId: post._id });
+        });
+        (src.comments || []).forEach(c => {
+            activities.push({ userId: users[c.author]._id, type: 'COMMENT', targetType: 'Post', targetId: post._id });
+        });
+    });
+    await Activity.insertMany(activities);
+
     // Met à jour le compteur de posts par topic.
     for (const topic of topics) {
         const count = createdPosts.filter(p => String(p.topicId) === String(topic._id)).length;
         await Topic.findByIdAndUpdate(topic._id, { postsCount: count });
     }
 
-    console.log(`[seed] OK : ${users.length} users, ${topics.length} topics, ${createdPosts.length} posts.`);
+    console.log(`[seed] OK : ${users.length} users, ${topics.length} topics, ${createdPosts.length} posts, ${activities.length} activities.`);
     console.log(`[seed] Connexion test -> email: alice@breezy.test  |  mot de passe: ${PASSWORD}`);
 }
 
