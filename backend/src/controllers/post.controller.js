@@ -48,6 +48,24 @@ const getPost = async (req, res) => {
     }
 };
 
+// Edit a post (author only)
+const updatePost = async (req, res) => {
+    const { content } = req.body;
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+        if (!post.authorId.equals(req.user.id)) {
+            return res.status(403).json({ error: 'You can only edit your own posts' });
+        }
+
+        post.content = content;
+        await post.save();
+        res.json(post);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 // Like / Unlike a post (toggle)
 const likePost = async (req, res) => {
     try {
@@ -263,4 +281,4 @@ const getFeed = async (req, res) => {
     }
 };
 
-module.exports = { createPost, getPost, likePost, addComment, addReply, likeComment, likeReply, listPosts, getFeed };
+module.exports = { createPost, getPost, updatePost, likePost, addComment, addReply, likeComment, likeReply, listPosts, getFeed };

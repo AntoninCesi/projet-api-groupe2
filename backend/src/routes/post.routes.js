@@ -2,12 +2,13 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middlewares/auth.middleware');
 const requireFields = require('../middlewares/requiredFields.middleware');
-const { createPost, getPost, likePost, addComment, addReply, likeComment, likeReply, listPosts, getFeed } = require('../controllers/post.controller');
+const { createPost, getPost, updatePost, likePost, addComment, addReply, likeComment, likeReply, listPosts, getFeed } = require('../controllers/post.controller');
 
 router.get('/', listPosts);
 router.get('/feed', auth, getFeed);
 router.get('/:id', getPost);
 router.post('/', auth, requireFields(['content']), createPost);
+router.patch('/:id', auth, requireFields(['content']), updatePost);
 router.post('/:id/like', auth, likePost);
 router.post('/:id/comments', auth, requireFields(['content']), addComment);
 router.post('/:id/comments/:commentId/replies', auth, requireFields(['content']), addReply);
