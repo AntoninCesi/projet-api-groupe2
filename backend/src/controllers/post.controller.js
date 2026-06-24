@@ -3,6 +3,7 @@ const Activity = require('../models/activity.model');
 const Notification = require('../models/notification.model');
 const User = require('../models/user.model');
 const Topic = require('../models/topic.model');
+const Report = require('../models/report.model');
 
 // Create a post
 const createPost = async (req, res) => {
@@ -263,4 +264,23 @@ const getFeed = async (req, res) => {
     }
 };
 
-module.exports = { createPost, getPost, likePost, addComment, addReply, likeComment, likeReply, listPosts, getFeed };
+// report a post
+const reportPost = async (req, res) => {
+    const { reason } = req.body;
+    if (!reason) return res.status(400).json({ error: 'Missing reason' });
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+
+        const report = await Report.create({
+            reporterId: req.user.id,
+            postId: post._id,
+            reason,
+        });
+        res.status(201).json(report);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+module.exports = { createPost, getPost, likePost, addComment, addReply, likeComment, likeReply, listPosts, getFeed, reportPost };
