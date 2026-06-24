@@ -58,8 +58,10 @@ export default function ThreadPage() {
       {/* contact header */}
       <header className="flex items-center gap-3 border-b border-line bg-white px-5 py-3">
         <Link href="/messages" aria-label="Back" className="text-ink"><ArrowLeft size={22} /></Link>
-        <Avatar name={contact} size={36} />
-        <p className="font-semibold text-ink">{contact}</p>
+        <Link href={`/users/${userId}`} className="flex items-center gap-3">
+          <Avatar name={contact} size={36} />
+          <p className="font-semibold text-ink hover:underline">{contact}</p>
+        </Link>
       </header>
 
       {/* message thread */}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, MessageCircle, Repeat2, BadgeCheck, ChevronDown, Pin } from 'lucide-react';
 import Shell from '@/components/Shell';
@@ -98,11 +99,14 @@ function PostCard({ post }) {
       )}
 
       <div className="flex items-center gap-2">
-        <Avatar name={post.author} src={post.avatar} size={40} />
-        <div className="flex flex-1 items-center gap-1">
-          <span className="font-title text-lg font-semibold text-ink">{post.author}</span>
+        <Link
+          href={post.authorId ? `/users/${post.authorId}` : '#'}
+          className="flex flex-1 items-center gap-2"
+        >
+          <Avatar name={post.author} src={post.avatar} size={40} />
+          <span className="font-title text-lg font-semibold text-ink hover:underline">{post.author}</span>
           {post.verified && <BadgeCheck size={16} className="text-brand" />}
-        </div>
+        </Link>
         <MessageButton userId={post.authorId} />
       </div>
       <p className="mt-1 text-xs text-faint">{post.time} ago</p>
@@ -161,10 +165,18 @@ function CommentItem({ comment, onReply }) {
 function CommentRow({ comment, onReplyClick }) {
   return (
     <div className="flex gap-2.5 rounded-xl p-2 transition hover:bg-brand/[0.04]">
-      <Avatar name={comment.author} src={comment.avatar} size={34} />
+      {comment.authorId ? (
+        <Link href={`/users/${comment.authorId}`} className="shrink-0"><Avatar name={comment.author} src={comment.avatar} size={34} /></Link>
+      ) : (
+        <Avatar name={comment.author} src={comment.avatar} size={34} />
+      )}
       <div className="flex-1">
         <div className="flex items-center gap-1">
-          <span className="text-sm font-semibold text-ink">{comment.author}</span>
+          {comment.authorId ? (
+            <Link href={`/users/${comment.authorId}`} className="text-sm font-semibold text-ink hover:underline">{comment.author}</Link>
+          ) : (
+            <span className="text-sm font-semibold text-ink">{comment.author}</span>
+          )}
           <span className="text-xs text-faint">· {comment.time}</span>
         </div>
         <p className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink">{comment.text}</p>

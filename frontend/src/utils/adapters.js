@@ -39,6 +39,7 @@ export function mapReply(r, userId) {
   return {
     id: r._id,
     author: r.authorId?.username ?? 'unknown',
+    authorId: r.authorId?._id ?? null, // to link to the author's profile
     avatar: r.authorId?.avatarUrl || null,
     time: timeAgo(r.createdAt),
     text: r.content,
