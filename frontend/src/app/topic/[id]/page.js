@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Pencil, MessageCircle, Repeat2, BadgeCheck, Pin, Plus } from 'lucide-react';
 import Shell from '@/components/Shell';
 import LikeButton from '@/components/LikeButton';
@@ -118,17 +118,29 @@ function TabButton({ label, active, onClick }) {
 
 // avatar + author + time row (shared between read & edit modes)
 function PostHead({ post }) {
+  const router = useRouter();
+  // le header est dans un <Link> de post -> on intercepte pour aller vers le profil
+  function goAuthor(e) {
+    if (!post.authorId) return;
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/users/${post.authorId}`);
+  }
   return (
     <div className="flex items-start gap-2">
       {/* mocked posts -> logo (img); user posts -> initials avatar */}
-      {post.avatar ? (
-        <img src={post.avatar} alt={post.author} className="h-9 w-9 rounded-full object-cover" />
-      ) : (
-        <Avatar name={post.author} size={36} />
-      )}
+      <span onClick={goAuthor} className={post.authorId ? 'cursor-pointer' : ''}>
+        {post.avatar ? (
+          <img src={post.avatar} alt={post.author} className="h-9 w-9 rounded-full object-cover" />
+        ) : (
+          <Avatar name={post.author} size={36} />
+        )}
+      </span>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1">
-          <span className="font-title font-semibold text-ink">{post.author}</span>
+          <span onClick={goAuthor} className={`font-title font-semibold text-ink ${post.authorId ? 'cursor-pointer hover:underline' : ''}`}>
+            {post.author}
+          </span>
           {post.verified && <BadgeCheck size={15} className="text-brand" />}
         </div>
         <span className="text-xs text-faint">{post.time} ago</span>

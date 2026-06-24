@@ -4,7 +4,7 @@ const Notification = require('../models/notification.model');
 // get user profile
 const getProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.params.id).select('username bio avatarUrl isOfficialSource karma degree createdAt');
+        const user = await User.findById(req.params.id).select('username bio avatarUrl isVerified isOfficialSource karma degree followedTopics followedThemes following createdAt');
         if (!user) return res.status(404).json({ error: 'User not found' });
 
         const followersCount = await User.countDocuments({ following: req.params.id });
