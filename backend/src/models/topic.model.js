@@ -7,7 +7,7 @@ const topicSchema = new Schema({
     category: { type: String, default: '' },
     tags: { type: [String], default: [] },
     source: { type: String, enum: ['POLYMARKET', 'COMMUNITY'], required: true },
-    polymarketId: { type: String, default: null, unique: true, sparse: true },
+    polymarketId: { type: String, default: null },
     polymarketVolume24hr: { type: Number, default: 0},
     internalHeat: { type: Number, default: 0 },
     externalHeat: { type: Number, default: 0 },
@@ -23,5 +23,12 @@ const topicSchema = new Schema({
         default: [],
     },
 }, { timestamps: true });
+
+// Unicité du polymarketId UNIQUEMENT pour les vrais ids (string).
+// Un index partiel évite la collision entre topics COMMUNITY (polymarketId null).
+topicSchema.index(
+    { polymarketId: 1 },
+    { unique: true, partialFilterExpression: { polymarketId: { $type: 'string' } } }
+);
 
 module.exports = mongoose.model('Topic', topicSchema);
