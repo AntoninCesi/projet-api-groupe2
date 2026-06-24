@@ -102,6 +102,12 @@ const syncPolymarket = async () => {
         }
 
         await recalculateDegrees();
+
+        if (process.env.SEED_ON_START === 'true') {
+            const { seedContentIfEmpty } = require('../seed');
+            await seedContentIfEmpty();
+        }
+
         console.log(`Polymarket sync done — ${events.length} topics upserted`);
     } catch (err) {
         console.error('Polymarket sync error:', err.message);
