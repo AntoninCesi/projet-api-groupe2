@@ -9,7 +9,7 @@ const notificationRoutes = require('./routes/notification.routes');
 const messageRoutes = require('./routes/message.routes');
 const themeRoutes = require('./routes/theme.routes');
 const { startSyncJob } = require('./jobs/polymarketSync');
-const { seedIfEmpty } = require('./seed');
+const { seedUsersIfEmpty, seedContentIfEmpty } = require('./seed');
 const cors = require('cors');
 
 const app = express();
@@ -27,9 +27,12 @@ app.use('/themes', themeRoutes);
 const PORT = process.env.PORT || 3000;
 
 connectDB().then(async () => {
-    // Pré-remplit la base au démarrage si elle est vide (activé via SEED_ON_START en Docker).
+    // Pré-remplit la base au démarrage (activé via SEED_ON_START en Docker).
     if (process.env.SEED_ON_START === 'true') {
-        await seedIfEmpty();
+        await seedUsersIfEmpty();
+        if (process.env.ENABLE_SYNC === 'false') {
+            await seedContentIfEmpty();
+        }
     }
     startSyncJob();
     app.listen(PORT, () => console.log(`Breezy backend is running on port ${PORT}`));
