@@ -27,6 +27,11 @@ async function request(method, path, { params, body } = {}) {
 
   const data = await res.json().catch(() => null); // empty response -> null
   if (!res.ok) {
+    if (res.status === 403 && data?.error === 'Account suspended or banned') {
+        if (typeof window !== 'undefined' && window.location.pathname !== '/suspended')
+            window.location.href = '/suspended';
+        return;
+    }
     const err = new Error(data?.error || `HTTP ${res.status}`);
     err.response = { data, status: res.status };
     throw err;
