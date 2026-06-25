@@ -1,46 +1,8 @@
 require('dotenv').config();
-const express = require('express');
+const app = require('./app');
 const connectDB = require('./config/database.config');
-const postRoutes = require('./routes/post.routes');
-const authRoutes = require('./routes/auth.routes');
-const userRoutes = require('./routes/user.routes');
-const topicRoutes = require('./routes/topic.routes');
-const notificationRoutes = require('./routes/notification.routes');
-const messageRoutes = require('./routes/message.routes');
-const themeRoutes = require('./routes/theme.routes');
 const { startSyncJob } = require('./jobs/polymarketSync');
 const { seedUsersIfEmpty, seedContentIfEmpty } = require('./seed');
-const cors = require('cors');
-
-const app = express();
-app.use(express.json());
-
-const allowedOrigins = process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(',')
-    : ['http://localhost:3005'];
-
-app.use(cors({ origin: allowedOrigins }))
-
-app.use('/posts', postRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/users', userRoutes);
-app.use('/topics', topicRoutes);
-app.use('/notifications', notificationRoutes);
-app.use('/messages', messageRoutes);
-app.use('/themes', themeRoutes);
-
-// Swagger UI at /api-docs — optional, needs: npm install swagger-ui-express yamljs
-// Guarded so the server still starts if the packages aren't installed.
-try {
-    const path = require('path');
-    const swaggerUi = require('swagger-ui-express');
-    const YAML = require('yamljs');
-    const openapi = YAML.load(path.join(__dirname, '../openapi.yaml'));
-    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapi));
-    console.log('Swagger UI available at /api-docs');
-} catch (err) {
-    console.log('Swagger UI disabled — run `npm install swagger-ui-express yamljs` to enable /api-docs');
-}
 
 const PORT = process.env.PORT || 3000;
 
