@@ -34,3 +34,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# certificat racine local de Caddy (propre à chaque machine, à ne pas versionner)
+caddy-root-CA.crt

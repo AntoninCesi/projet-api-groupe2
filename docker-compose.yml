@@ -31,9 +31,9 @@ services:
             context: ./frontend
             args:
                 # NEXT_PUBLIC_API_URL est injecté au build (bundle navigateur).
-                # On vise localhost car l'URL est résolue par le navigateur de l'user,
-                # qui ne connaît pas le hostname Docker "backend".
-                NEXT_PUBLIC_API_URL: http://localhost:3000
+                # Le navigateur appelle l'API via le reverse proxy HTTPS (Caddy),
+                # sur le même origine -> pas de mixed-content, un seul certificat.
+                NEXT_PUBLIC_API_URL: https://localhost/api-proxy
         environment:
             # URL serveur->serveur (SSR dans le conteneur) : passe par le réseau Docker.
             - INTERNAL_API_URL=http://backend:3000
@@ -44,8 +44,25 @@ services:
         networks:
             - breezy-network
 
+    caddy:
+        image: caddy:2-alpine
+        ports:
+            - "80:80"     # redirige automatiquement vers HTTPS
+            - "443:443"   # point d'entrée HTTPS
+        volumes:
+            - ./Caddyfile:/etc/caddy/Caddyfile:ro
+            - caddy_data:/data      # certificats persistés entre redémarrages
+            - caddy_config:/config
+        depends_on:
+            - frontend
+            - backend
+        networks:
+            - breezy-network
+
 volumes:
     mongo_data:
+    caddy_data:
+    caddy_config:
 
 networks:
     breezy-network:
