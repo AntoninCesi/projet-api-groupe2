@@ -1,0 +1,22 @@
+# Reverse proxy HTTPS.
+# Caddy termine le TLS (certificat auto-signé local, généré automatiquement pour "localhost")
+# et redirige tout le trafic vers les conteneurs internes (en HTTP, sur le réseau Docker).
+#
+# Un seul point d'entrée -> un seul certificat à accepter dans le navigateur :
+#   https://localhost/api-proxy/*  -> backend  (le préfixe /api-proxy est retiré)
+#   https://localhost/*            -> frontend (Next.js)
+#
+# En prod, il suffirait de remplacer "localhost" par le vrai domaine :
+# Caddy obtiendrait alors un certificat Let's Encrypt valide automatiquement.
+
+localhost {
+	# Appels API du navigateur : /api-proxy/topics -> backend reçoit /topics
+	handle_path /api-proxy/* {
+		reverse_proxy backend:3000
+	}
+
+	# Tout le reste -> l'application Next.js
+	handle {
+		reverse_proxy frontend:3000
+	}
+}
