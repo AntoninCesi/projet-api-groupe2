@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Compass, Bell, User, Plus, Landmark, Trophy, Cpu, TrendingUp, Image, FlaskConical } from 'lucide-react';
+import { Home, Compass, Bell, User, Plus, Mail, Landmark, Trophy, Cpu, TrendingUp, Image, FlaskConical } from 'lucide-react';
 import Avatar from './Avatar';
 import api from '@/utils/api';
 import { mapProfile } from '@/utils/adapters';
@@ -13,6 +13,7 @@ const nav = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/explore', label: 'Explore', icon: Compass },
   { href: '/activity', label: 'Activity', icon: Bell },
+  { href: '/messages', label: 'Messages', icon: Mail },
   { href: '/profile', label: 'Profile', icon: User },
 ];
 
@@ -52,7 +53,7 @@ export default function Sidebar() {
 
       {nav.map((n) => {
         const Icon = n.icon;
-        const active = path === n.href;
+        const active = n.href === '/' ? path === '/' : path.startsWith(n.href);
         const badge = n.href === '/activity' && unread > 0 ? unread : null;
         return (
           <Link

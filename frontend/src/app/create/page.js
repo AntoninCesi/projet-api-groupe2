@@ -17,6 +17,7 @@ export default function CreatePage() {
   const [topics, setTopics] = useState([]);
   const [topic, setTopic] = useState(null);
   const [me, setMe] = useState(null);
+  const [official, setOfficial] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -28,7 +29,10 @@ export default function CreatePage() {
         setTopic((wanted && list.find((t) => t.id === wanted)) || list[0] || null);
       })
       .catch(() => {});
-    api.get('/api/auth/me').then((res) => setMe(mapProfile(res.data))).catch(() => {});
+    api.get('/api/auth/me').then((res) => {
+      setMe(mapProfile(res.data));
+      setOfficial(!!res.data.isOfficialSource);
+    }).catch(() => {});
   }, []);
 
   const remaining = MAX - text.length;
@@ -39,8 +43,8 @@ export default function CreatePage() {
     setError('');
     try {
       await api.post('/posts', { content: text.trim(), topicId: topic.id });
-      // ?tab=community : un post user arrive côté Community, on l'ouvre direct
-      router.push(`/topic/${topic.id}?tab=community`);
+      // official-source authors land in Official, everyone else in Community
+      router.push(`/topic/${topic.id}?tab=${official ? 'official' : 'community'}`);
     } catch (err) {
       setError(err.response?.data?.error || 'Could not publish. Please try again.');
     }

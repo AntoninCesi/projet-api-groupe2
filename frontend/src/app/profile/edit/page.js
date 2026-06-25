@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AtSign } from 'lucide-react';
+import Shell from '@/components/Shell';
 import api from '@/utils/api';
 import { logout } from '@/utils/auth';
 
@@ -72,9 +73,9 @@ export default function EditProfilePage() {
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-md bg-background px-5 pb-12">
+    <Shell focused>
       {/* top bar */}
-      <header className="flex items-center justify-between py-5">
+      <header className="flex items-center justify-between py-5 lg:pt-0">
         <Link href="/profile" className="text-sm text-muted">Cancel</Link>
         <h1 className="font-title text-lg font-bold text-ink">Edit profile</h1>
         <button
@@ -146,7 +147,7 @@ export default function EditProfilePage() {
       <button onClick={handleLogout} className="mt-8 w-full text-center text-sm font-semibold text-red-500">
         Log out
       </button>
-    </main>
+    </Shell>
   );
 }
 
