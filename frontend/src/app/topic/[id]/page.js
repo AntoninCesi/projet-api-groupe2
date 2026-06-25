@@ -18,6 +18,7 @@ export default function TopicPage() {
   const [topic, setTopic] = useState(null);
   const [posts, setPosts] = useState([]);
   const [following, setFollowing] = useState(false);
+  const [iAmOfficial, setIAmOfficial] = useState(false);
   // if we just posted (?tab=community), open straight to Community
   const [tab, setTab] = useState(search.get('tab') === 'community' ? 'community' : 'official');
 
@@ -27,9 +28,12 @@ export default function TopicPage() {
     api.get('/posts', { params: { topicId: id } })
       .then((res) => setPosts(res.data.map((p) => mapPost(p, userId))))
       .catch(() => {});
-    // "following" state from the current profile (ignored if not signed in)
+    // following state + official-source flag from the current profile (ignored if not signed in)
     api.get('/api/auth/me')
-      .then((res) => setFollowing((res.data.followedTopics ?? []).some((t) => String(t) === String(id))))
+      .then((res) => {
+        setFollowing((res.data.followedTopics ?? []).some((t) => String(t) === String(id)));
+        setIAmOfficial(!!res.data.isOfficialSource);
+      })
       .catch(() => {});
   }, [id]);
 
@@ -59,8 +63,8 @@ export default function TopicPage() {
           <Avatar name={topic?.title || 'Topic'} size={36} />
         )}
         <div className="min-w-0 flex-1">
-          <h1 className="truncate font-title text-base font-bold leading-tight text-ink">{topic?.title || 'Loading…'}</h1>
-          <p className="text-xs text-faint">{topic?.degree ?? 0}° · {topic?.participants ?? '0 participants'}</p>
+          <h1 className="truncate font-title text-base font-bold leading-tight text-ink lg:text-2xl">{topic?.title || 'Loading…'}</h1>
+          <p className="text-xs text-faint lg:text-sm">{topic?.degree ?? 0}° · {topic?.participants ?? '0 participants'}</p>
         </div>
         <button
           onClick={toggleFollow}
@@ -71,15 +75,15 @@ export default function TopicPage() {
       </div>
 
       {/* Official / Community tabs */}
-      <div className="mt-4 flex gap-1 rounded-2xl bg-line/60 p-1">
+      <div className="mt-4 flex gap-1 rounded-2xl bg-line/60 p-1 lg:w-fit">
         <TabButton label="Official" active={tab === 'official'} onClick={() => setTab('official')} />
         <TabButton label="Community" active={tab === 'community'} onClick={() => setTab('community')} />
       </div>
 
-      {tab === 'community' && (
+      {tab === (iAmOfficial ? 'official' : 'community') && (
         <Link
           href={`/create?topic=${id}`}
-          className="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-brand-grad py-3 text-sm font-bold text-onbrand shadow-glowsm transition hover:-translate-y-px"
+          className="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-brand-grad py-3 text-sm font-bold text-onbrand shadow-glowsm transition hover:-translate-y-px lg:w-fit lg:px-6"
         >
           <Plus size={16} /> Create a post
         </Link>
@@ -109,7 +113,7 @@ function TabButton({ label, active, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`flex-1 rounded-xl py-2 text-sm font-medium ${active ? 'bg-white text-ink shadow-sm' : 'text-muted'}`}
+      className={`flex-1 rounded-xl py-2 text-sm font-medium lg:flex-initial lg:px-10 ${active ? 'bg-white text-ink shadow-sm' : 'text-muted'}`}
     >
       {label}
     </button>

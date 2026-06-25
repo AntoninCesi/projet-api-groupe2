@@ -37,22 +37,50 @@ export default function ProfilePage() {
 
   return (
     <Shell>
-      {/* header */}
-      <div className="flex justify-between py-4 lg:pt-0">
-        <Link href="/messages" className="text-muted" aria-label="Messages"><Mail size={22} /></Link>
-        <Link href="/profile/edit" className="text-muted" aria-label="Edit profile"><Settings size={22} /></Link>
+      {/* mobile: top icon bar + centered identity */}
+      <div className="lg:hidden">
+        <div className="flex justify-between py-4">
+          <Link href="/messages" className="text-muted" aria-label="Messages"><Mail size={22} /></Link>
+          <Link href="/profile/edit" className="text-muted" aria-label="Edit profile"><Settings size={22} /></Link>
+        </div>
+        <div className="flex flex-col items-center text-center">
+          {avatar ? (
+            <img src={avatar} alt={name} className="h-24 w-24 rounded-full object-cover" />
+          ) : (
+            <Avatar name={name} size={96} />
+          )}
+          <h1 className="mt-3 font-title text-2xl font-bold text-ink">{name}</h1>
+          <p className="text-faint">{handle}</p>
+          <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted">{bio}</p>
+        </div>
       </div>
 
-      {/* identity */}
-      <div className="flex flex-col items-center text-center">
+      {/* desktop: profile header row (avatar, identity, actions) */}
+      <div className="hidden lg:flex lg:items-start lg:gap-6">
         {avatar ? (
-          <img src={avatar} alt={name} className="h-24 w-24 rounded-full object-cover" />
+          <img src={avatar} alt={name} className="h-24 w-24 shrink-0 rounded-full object-cover" />
         ) : (
           <Avatar name={name} size={96} />
         )}
-        <h1 className="mt-3 font-title text-2xl font-bold text-ink">{name}</h1>
-        <p className="text-faint">{handle}</p>
-        <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted">{bio}</p>
+        <div className="min-w-0 flex-1">
+          <h1 className="font-title text-3xl font-bold text-ink">{name}</h1>
+          <p className="text-faint">{handle}</p>
+          {bio && <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">{bio}</p>}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Link
+            href="/messages"
+            className="flex items-center gap-1.5 rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-muted transition hover:border-brand hover:text-press"
+          >
+            <Mail size={16} /> Messages
+          </Link>
+          <Link
+            href="/profile/edit"
+            className="flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-press"
+          >
+            <Settings size={16} /> Edit profile
+          </Link>
+        </div>
       </div>
 
       {/* stats */}
