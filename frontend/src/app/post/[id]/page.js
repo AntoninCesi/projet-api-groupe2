@@ -80,7 +80,7 @@ export default function PostPage() {
           )}
           {comments.map((c) => (
             <div key={c.id} className="py-4">
-              <CommentItem comment={c} onReply={addReply} />
+              <CommentItem comment={c} onReply={addReply} postId={id} />
             </div>
           ))}
         </div>
@@ -127,7 +127,7 @@ function PostCard({ post }) {
   );
 }
 
-function CommentItem({ comment, onReply }) {
+function CommentItem({ comment, onReply, postId }) {
   // openId = id de la ligne dont l'input reply est ouvert (commentaire ou reply)
   const [openId, setOpenId] = useState(null);
 
@@ -143,7 +143,11 @@ function CommentItem({ comment, onReply }) {
 
   return (
     <div>
-      <CommentRow comment={comment} onReplyClick={() => toggle(comment.id)} />
+      <CommentRow
+        comment={comment}
+        onReplyClick={() => toggle(comment.id)}
+        likeEndpoint={`/posts/${postId}/comments/${comment.id}/like`}
+      />
       {openId === comment.id && <ReplyInput onSubmit={submit} />}
 
       {/* replies indentées (1 niveau) */}
@@ -151,7 +155,11 @@ function CommentItem({ comment, onReply }) {
         <div className="ml-5 mt-3 space-y-3 border-l border-line pl-4">
           {comment.replies.map((r) => (
             <div key={r.id}>
-              <CommentRow comment={r} onReplyClick={() => toggle(r.id)} />
+              <CommentRow
+                comment={r}
+                onReplyClick={() => toggle(r.id)}
+                likeEndpoint={`/posts/${postId}/comments/${comment.id}/replies/${r.id}/like`}
+              />
               {openId === r.id && <ReplyInput onSubmit={submit} />}
             </div>
           ))}
@@ -162,7 +170,7 @@ function CommentItem({ comment, onReply }) {
 }
 
 // ligne d'un commentaire ou d'une reply (même rendu, onReplyClick optionnel)
-function CommentRow({ comment, onReplyClick }) {
+function CommentRow({ comment, onReplyClick, likeEndpoint = null }) {
   return (
     <div className="flex gap-2.5 rounded-xl p-2 transition hover:bg-brand/[0.04]">
       {comment.authorId ? (
@@ -181,7 +189,7 @@ function CommentRow({ comment, onReplyClick }) {
         </div>
         <p className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink">{comment.text}</p>
         <div className="mt-1 flex items-center gap-4 text-xs text-faint">
-          <LikeButton count={comment.likes} size={14} />
+          <LikeButton count={comment.likes} liked={comment.liked} size={14} endpoint={likeEndpoint} />
           {onReplyClick && (
             <button onClick={onReplyClick} className="font-medium text-faint">
               Reply
