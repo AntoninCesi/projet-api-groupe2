@@ -1,0 +1,728 @@
+openapi: 3.0.3
+info:
+  title: Breezy API
+  version: 1.0.0
+  description: >
+    REST API for Breezy ("Trend") — a social trend-tracking app where topics are
+    sourced from Polymarket and the community. Covers authentication, users,
+    topics, posts (with comments/replies), themes (topic categories), private
+    messages and notifications.
+
+    Authenticated routes expect a Bearer JWT obtained from POST /api/auth/login,
+    sent as Authorization: Bearer <token>.
+
+tags:
+  - name: Auth
+    description: Registration, login and current-user.
+  - name: Users
+    description: Public profiles and follow/edit.
+  - name: Topics
+    description: Trend topics, sorted by heat (degree).
+  - name: Posts
+    description: Posts, likes, comments and replies.
+  - name: Themes
+    description: Topic categories aggregated as followable themes.
+  - name: Messages
+    description: Private one-to-one messages.
+  - name: Notifications
+    description: Activity notifications for the current user.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  # ----------------------------------------------------------------- Auth
+  /api/auth/register:
+    post:
+      summary: Register a new user
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - username
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                username:
+                  type: string
+      responses:
+        201:
+          description: Account created
+        400:
+          description: Missing or invalid fields
+        409:
+          description: Email or username already taken
+        500:
+          description: Server error
+
+  /api/auth/login:
+    post:
+      summary: Log in
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: Authenticated (returns a JWT)
+        400:
+          description: Missing or invalid fields
+        401:
+          description: Invalid email or password
+        500:
+          description: Server error
+
+  /api/auth/me:
+    get:
+      summary: Get the current user
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Current user
+        401:
+          description: Unauthorized
+        404:
+          description: User not found
+        500:
+          description: Server error
+
+  # ----------------------------------------------------------------- Users
+  /users/me:
+    patch:
+      summary: Update my profile
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                bio:
+                  type: string
+                avatarUrl:
+                  type: string
+      responses:
+        200:
+          description: Updated user
+        401:
+          description: Unauthorized
+        404:
+          description: User not found
+        409:
+          description: Username already taken
+        500:
+          description: Server error
+
+  /users/{id}:
+    get:
+      summary: Get a public profile
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: User profile
+        404:
+          description: User not found
+        500:
+          description: Server error
+
+  /users/{id}/follow:
+    post:
+      summary: Follow / unfollow a user (toggle)
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: New follow state
+        400:
+          description: Cannot follow yourself
+        401:
+          description: Unauthorized
+        404:
+          description: User not found
+        500:
+          description: Server error
+
+  # ----------------------------------------------------------------- Topics
+  /topics:
+    get:
+      summary: List topics (sorted by heat)
+      tags:
+        - Topics
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: search
+          in: query
+          description: Case-insensitive match on the title
+          schema:
+            type: string
+      responses:
+        200:
+          description: Array of topics
+        500:
+          description: Server error
+
+  /topics/{id}:
+    get:
+      summary: Get a topic
+      tags:
+        - Topics
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Topic
+        404:
+          description: Topic not found
+        500:
+          description: Server error
+
+  /topics/{id}/follow:
+    post:
+      summary: Follow / unfollow a topic (toggle)
+      tags:
+        - Topics
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: New follow state
+        401:
+          description: Unauthorized
+        404:
+          description: Topic not found
+        500:
+          description: Server error
+
+  # ----------------------------------------------------------------- Posts
+  /posts:
+    get:
+      summary: List posts (filterable by topic and/or author)
+      tags:
+        - Posts
+      parameters:
+        - name: topicId
+          in: query
+          schema:
+            type: string
+        - name: authorId
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Array of posts
+        500:
+          description: Server error
+    post:
+      summary: Create a post
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                topicId:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+                repostOf:
+                  type: string
+      responses:
+        201:
+          description: Post created
+        400:
+          description: Missing or invalid fields
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
+
+  /posts/feed:
+    get:
+      summary: Get my feed (posts from followed users)
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Array of posts
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
+
+  /posts/{id}:
+    get:
+      summary: Get a post (with comments and replies)
+      tags:
+        - Posts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Post
+        404:
+          description: Post not found
+        500:
+          description: Server error
+    patch:
+      summary: Edit a post (author only)
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+      responses:
+        200:
+          description: Updated post
+        400:
+          description: Missing or invalid fields
+        401:
+          description: Unauthorized
+        403:
+          description: Not the author of this post
+        404:
+          description: Post not found
+        500:
+          description: Server error
+
+  /posts/{id}/like:
+    post:
+      summary: Like / unlike a post (toggle)
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: New like state and count
+        401:
+          description: Unauthorized
+        404:
+          description: Post not found
+        500:
+          description: Server error
+
+  /posts/{id}/comments:
+    post:
+      summary: Add a comment
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+      responses:
+        201:
+          description: Comment created
+        400:
+          description: Missing or invalid fields
+        401:
+          description: Unauthorized
+        404:
+          description: Post not found
+        500:
+          description: Server error
+
+  /posts/{id}/comments/{commentId}/replies:
+    post:
+      summary: Reply to a comment
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                replyTo:
+                  type: string
+      responses:
+        201:
+          description: Reply created
+        400:
+          description: Missing or invalid fields
+        401:
+          description: Unauthorized
+        404:
+          description: Post or comment not found
+        500:
+          description: Server error
+
+  /posts/{id}/comments/{commentId}/like:
+    post:
+      summary: Like / unlike a comment (toggle)
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: New like state and count
+        401:
+          description: Unauthorized
+        404:
+          description: Post or comment not found
+        500:
+          description: Server error
+
+  /posts/{id}/comments/{commentId}/replies/{replyId}/like:
+    post:
+      summary: Like / unlike a reply (toggle)
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: replyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: New like state and count
+        401:
+          description: Unauthorized
+        404:
+          description: Post, comment or reply not found
+        500:
+          description: Server error
+
+  # ----------------------------------------------------------------- Themes
+  /themes:
+    get:
+      summary: List themes
+      tags:
+        - Themes
+      responses:
+        200:
+          description: Array of themes
+        500:
+          description: Server error
+
+  /themes/{name}:
+    get:
+      summary: Get a theme (with its topics)
+      tags:
+        - Themes
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Category name (URL-encoded)
+          schema:
+            type: string
+      responses:
+        200:
+          description: Theme with topics
+        404:
+          description: Theme not found
+        500:
+          description: Server error
+
+  /themes/{name}/follow:
+    post:
+      summary: Follow / unfollow a theme (toggle)
+      tags:
+        - Themes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: New follow state
+        401:
+          description: Unauthorized
+        404:
+          description: Theme not found
+        500:
+          description: Server error
+
+  # ----------------------------------------------------------------- Messages
+  /messages:
+    get:
+      summary: List conversations (latest message per contact)
+      tags:
+        - Messages
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Array of latest messages
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
+    post:
+      summary: Send a message
+      tags:
+        - Messages
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - receiverId
+                - content
+              properties:
+                receiverId:
+                  type: string
+                content:
+                  type: string
+      responses:
+        201:
+          description: Message created
+        400:
+          description: Missing/invalid fields, invalid receiver id, or messaging yourself
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
+
+  /messages/{userId}:
+    get:
+      summary: Get a conversation (marks received messages as read)
+      tags:
+        - Messages
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Array of messages (oldest first)
+        400:
+          description: Invalid user id
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
+
+  # ----------------------------------------------------------------- Notifications
+  /notifications:
+    get:
+      summary: List notifications
+      tags:
+        - Notifications
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Array of notifications
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
+
+  /notifications/read:
+    patch:
+      summary: Mark all notifications as read
+      tags:
+        - Notifications
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Acknowledged
+        401:
+          description: Unauthorized
+        500:
+          description: Server error
