@@ -11,12 +11,16 @@ import Shell from '@/components/Shell';
 import Avatar from '@/components/Avatar';
 import api from '@/utils/api';
 import { mapProfile, mapTheme, mapPost } from '@/utils/adapters';
-import { getUserId } from '@/utils/auth';
+import { getUserId, getUserRole } from '@/utils/auth';
 
 export default function UserProfilePage() {
   const { id } = useParams();
   const router = useRouter();
   const myId = getUserId();
+  const myRole = getUserRole();
+  const canModerate = myRole === 'moderator' || myRole === 'admin';
+  const [userStatus, setUserStatus] = useState('active');
+  const [modLoading, setModLoading] = useState(false);
 
   const [profile, setProfile] = useState(null);
   const [verified, setVerified] = useState(false);
@@ -38,6 +42,7 @@ export default function UserProfilePage() {
         const u = res.data;
         setProfile(mapProfile(u));
         setVerified(u.isVerified ?? false);
+        setUserStatus(u.status ?? 'active');
 
         // thèmes suivis -> stats via /themes
         const followed = u.followedThemes ?? [];
@@ -71,6 +76,18 @@ export default function UserProfilePage() {
       setFollowing(data.following);
     } catch {
       setFollowing(prev); // échec (ex. non connecté) -> rollback
+    }
+  }
+
+  async function setStatus(newStatus) {
+    setModLoading(true);
+    try {
+      await api.patch(`/users/${id}/status`, { status: newStatus });
+      setUserStatus(newStatus);
+    } catch {
+      alert('Failed to update status');
+    } finally {
+      setModLoading(false);
     }
   }
 
@@ -156,6 +173,38 @@ export default function UserProfilePage() {
           {posts.map((p) => (
             <PostItem key={p.id} post={p} />
           ))}
+        </div>
+      )}
+
+      {canModerate && (
+        <div className="mt-8 rounded-2xl border border-line bg-white p-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-faint">Moderation</h2>
+          <p className="mt-1 text-xs text-muted">
+            Current status: <strong className="text-ink">{userStatus}</strong>
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => setStatus('active')}
+              disabled={modLoading || userStatus === 'active'}
+              className="rounded-full border border-brand px-4 py-1.5 text-xs font-semibold text-brand disabled:opacity-40"
+            >
+              Active
+            </button>
+            <button
+              onClick={() => setStatus('suspended')}
+              disabled={modLoading || userStatus === 'suspended'}
+              className="rounded-full border border-line px-4 py-1.5 text-xs font-semibold text-muted disabled:opacity-40"
+            >
+              Suspend
+            </button>
+            <button
+              onClick={() => setStatus('banned')}
+              disabled={modLoading || userStatus === 'banned'}
+              className="rounded-full bg-red-50 px-4 py-1.5 text-xs font-semibold text-red-600 disabled:opacity-40"
+            >
+              Ban
+            </button>
+          </div>
         </div>
       )}
     </Shell>

@@ -26,3 +26,13 @@ export function getUserId() {
     return null;
   }
 }
+
+export function getUserRole() {
+  const token = getToken();
+  if (!token) return null;
+  try {
+    return JSON.parse(atob(token.split('.')[1])).role;
+  } catch {
+    return null;
+  }
+}
