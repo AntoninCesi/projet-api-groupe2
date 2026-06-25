@@ -29,6 +29,19 @@ app.use('/notifications', notificationRoutes);
 app.use('/messages', messageRoutes);
 app.use('/themes', themeRoutes);
 
+// Swagger UI at /api-docs — optional, needs: npm install swagger-ui-express yamljs
+// Guarded so the server still starts if the packages aren't installed.
+try {
+    const path = require('path');
+    const swaggerUi = require('swagger-ui-express');
+    const YAML = require('yamljs');
+    const openapi = YAML.load(path.join(__dirname, '../openapi.yaml'));
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapi));
+    console.log('Swagger UI available at /api-docs');
+} catch (err) {
+    console.log('Swagger UI disabled — run `npm install swagger-ui-express yamljs` to enable /api-docs');
+}
+
 const PORT = process.env.PORT || 3000;
 
 connectDB().then(async () => {
